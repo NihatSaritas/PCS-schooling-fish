@@ -6,6 +6,9 @@ from matplotlib.animation import FuncAnimation
 import json as json
 
 
+# If run from main directory, appends 'validation/' to savepath.
+PATH = ''
+# Buffersize for quiver to handle inconsistent tracked number of fish.
 NUM_FISH = 300
 
 
@@ -86,7 +89,7 @@ def animate(fish_dict):
     # Saving as gif is very slow and large (200+ mb) for 5000 frames, 
     # so switch to video format instead.
     # ani.save('fish_animation_2.gif', writer='pillow', fps=60)
-    ani.save('fish_animation_2.mp4', writer='ffmpeg', fps=60)
+    ani.save(PATH + 'fish_animation_2.mp4', writer='ffmpeg', fps=60)
     plt.show()
 
 
@@ -94,7 +97,9 @@ def read_dataset(file):
     try:
         f = open(file)
     except FileNotFoundError:
-        f = open('validation/' + file)
+        global PATH
+        PATH += 'validation/'
+        f = open(PATH + file)
     file_content = f.read()
     fish_dict = json.loads(file_content)
     return fish_dict

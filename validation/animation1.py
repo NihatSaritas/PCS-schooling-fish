@@ -4,6 +4,10 @@ from matplotlib.animation import FuncAnimation
 import pandas as pd
 
 
+# If run from main directory, appends 'validation/' to savepath.
+PATH = ''
+
+
 def animate(centroids, pikes, shiners):
     """
     Main animation loop. Saves small files as gif, big files as mp4.
@@ -62,7 +66,7 @@ def animate(centroids, pikes, shiners):
         interval=500
     )
 
-    ani.save('fish_animation_1.gif', writer='pillow', fps=2)
+    ani.save(PATH + 'fish_animation_1.gif', writer='pillow', fps=2)
     plt.show()
 
 
@@ -73,7 +77,9 @@ def read_dataset(file):
     try:
         df = pd.read_csv(file)
     except FileNotFoundError:
-        df = pd.read_csv('validation/' + file)
+        global PATH
+        PATH += 'validation/'
+        df = pd.read_csv(PATH + file)
     df = df[['batch', 'id', 'x', 'y', 'hx', 'hy']]
     return df
 
