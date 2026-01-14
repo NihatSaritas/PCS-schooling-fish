@@ -91,7 +91,10 @@ def animate(fish_dict):
 
 
 def read_dataset(file):
-    f = open(file)
+    try:
+        f = open(file)
+    except FileNotFoundError:
+        f = open('validation/' + file)
     file_content = f.read()
     fish_dict = json.loads(file_content)
     return fish_dict

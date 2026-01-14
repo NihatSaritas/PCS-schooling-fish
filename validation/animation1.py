@@ -70,7 +70,10 @@ def read_dataset(file):
     """
     Read csv file input and return pandas dataframe.
     """
-    df = pd.read_csv(file)
+    try:
+        df = pd.read_csv(file)
+    except FileNotFoundError:
+        df = pd.read_csv('validation/' + file)
     df = df[['batch', 'id', 'x', 'y', 'hx', 'hy']]
     return df
 
