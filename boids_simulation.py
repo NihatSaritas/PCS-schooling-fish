@@ -45,6 +45,11 @@ class Boid:
             self.vx += alignment_x * params['alignment_weight']
             self.vy += alignment_y * params['alignment_weight']
         
+        # Wall avoidance
+        wall_x, wall_y = self.avoid_walls(params['wall_margin'])
+        self.vx += wall_x * params['wall_weight']
+        self.vy += wall_y * params['wall_weight']
+        
         # Limit speed
         speed = math.sqrt(self.vx * self.vx + self.vy * self.vy)
         if speed > params['max_speed']:
@@ -55,15 +60,9 @@ class Boid:
         self.x += self.vx
         self.y += self.vy
         
-        # Wrap around edges
-        if self.x < 0:
-            self.x = self.width
-        elif self.x > self.width:
-            self.x = 0
-        if self.y < 0:
-            self.y = self.height
-        elif self.y > self.height:
-            self.y = 0
+        # Keep fish within bounds (hard constraint)
+        self.x = max(0, min(self.width, self.x))
+        self.y = max(0, min(self.height, self.y))
     
     def cohesion(self, neighbors):
         """Move toward the average position of neighbors."""
@@ -87,6 +86,27 @@ class Boid:
         avg_vx = sum(b.vx for b in neighbors) / len(neighbors)
         avg_vy = sum(b.vy for b in neighbors) / len(neighbors)
         return (avg_vx - self.vx) * 0.05, (avg_vy - self.vy) * 0.05
+    
+    def avoid_walls(self, margin):
+        """Avoid walls with repulsive force similar to separation."""
+        move_x = 0
+        move_y = 0
+        
+        # Left wall
+        if self.x < margin:
+            move_x += (margin - self.x) / margin
+        # Right wall
+        elif self.x > self.width - margin:
+            move_x -= (self.x - (self.width - margin)) / margin
+        
+        # Top wall
+        if self.y < margin:
+            move_y += (margin - self.y) / margin
+        # Bottom wall
+        elif self.y > self.height - margin:
+            move_y -= (self.y - (self.height - margin)) / margin
+        
+        return move_x, move_y
 
 
 class BoidsSimulation:
@@ -104,7 +124,9 @@ class BoidsSimulation:
             'max_speed': 4,
             'cohesion_weight': 1.0,
             'separation_weight': 1.5,
-            'alignment_weight': 1.0
+            'alignment_weight': 1.0,
+            'wall_margin': 50,
+            'wall_weight': 2.0
         }
         
         # Initialize boids
