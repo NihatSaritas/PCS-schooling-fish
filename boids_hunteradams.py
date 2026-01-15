@@ -18,8 +18,8 @@ class BoidsSimulation:
         self.centering_factor = 0.0005
         self.avoidfactor = 0.05
         self.matching_factor = 0.05
-        self.maxspeed = 6
-        self.minspeed = 3
+        self.maxspeed = 3
+        self.minspeed = 2
         
         # Screen dimensions
         self.width = width
