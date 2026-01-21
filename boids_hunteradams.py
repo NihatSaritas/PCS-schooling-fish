@@ -16,7 +16,7 @@ class BoidsSimulation:
         self.visual_range = 40
         self.protected_range = 8
         self.centering_factor = 0.0005
-        self.avoidfactor = 0.05
+        self.avoidfactor = 0.07
         self.matching_factor = 0.05
         self.maxspeed = 3
         self.minspeed = 2
@@ -33,7 +33,7 @@ class BoidsSimulation:
         self.height = height
 
         # Margins for turning
-        self.margin = 100
+        self.margin = max(0.2 * width, 0.2 * height)
         self.leftmargin = self.margin
         self.rightmargin = width - self.margin
         self.topmargin = self.margin
@@ -196,6 +196,21 @@ class BoidsSimulation:
             boid.x = boid.x + boid.vx
             boid.y = boid.y + boid.vy
 
+            # Hard wall constraint
+            if boid.x < 0:
+                boid.x = 0
+                boid.vx = abs(boid.vx)
+            elif boid.x > self.width:
+                boid.x = self.width
+                boid.vx = -abs(boid.vx)
+
+            if boid.y < 0:
+                boid.y = 0
+                boid.vy = abs(boid.vy)
+            elif boid.y > self.height:
+                boid.y = self.height
+                boid.vy = -abs(boid.vy)
+
 
 class BoidsVisualizer:
     def __init__(self, num_boids=100, width=640, height=480):
@@ -219,7 +234,7 @@ class BoidsVisualizer:
         self.animate()
         self.root.mainloop()
 
-    def get_triangle_points(self, boid, size=5):
+    def get_triangle_points(self, boid, size=3):
         """Calculate triangle vertices based on boid position and velocity"""
         # Calculate angle from velocity
         angle = math.atan2(boid.vy, boid.vx)
