@@ -23,9 +23,9 @@ class BoidsSimulation:
 
         """Inspired additions by Katz-et-all"""
         self.fieldofview = math.cos(math.radians(170)) # small blind zone behind
-        self.front_weight = 0.5
-        self.speed_control = 0.05
-        self.turning_control = 0.03
+        self.front_weight = 0.3
+        self.speed_control = 0.03
+        self.turning_control = 0.05
         self.max_turn = 0.15
 
         # Screen dimensions
@@ -156,7 +156,6 @@ class BoidsSimulation:
                 boid.vy = boid.vy - self.turnfactor
             if boid.y < self.topmargin:
                 boid.vy = boid.vy + self.turnfactor
-
 
             # Rotate velocity slightly based on left/right drive
             dtheta = self.turning_control * turn_drive

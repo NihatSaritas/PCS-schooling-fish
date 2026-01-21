@@ -21,6 +21,13 @@ class BoidsSimulation:
         self.maxspeed = 3
         self.minspeed = 2
 
+        """Inspired additions by Katz-et-all"""
+        self.fieldofview = math.cos(math.radians(170))  # small blind zone behind
+        self.front_weight = 0.3
+        self.speed_control = 0.03
+        self.turning_control = 0.05
+        self.max_turn = 0.15
+
         # Screen dimensions
         self.width = width
         self.height = height
@@ -48,6 +55,11 @@ class BoidsSimulation:
     def update(self):
         """Update all boids for one timestep"""
         for boid in self.boids:
+            # Heading frame
+            speed0 = math.sqrt(boid.vx * boid.vx + boid.vy * boid.vy) + 1e-9
+            hx, hy = boid.vx / speed0, boid.vy / speed0 #forward
+            px, py = -hy, hx #left/right
+
             # Zero all accumulator variables
             xpos_avg = 0
             ypos_avg = 0
@@ -56,6 +68,11 @@ class BoidsSimulation:
             neighboring_boids = 0
             close_dx = 0
             close_dy = 0
+
+            weight_sum = 0.0
+            front_pressure = 0.0
+            back_pressure = 0.0
+            turn_drive = 0.0
 
             # For every other boid in the flock
             for otherboid in self.boids:
@@ -77,24 +94,45 @@ class BoidsSimulation:
                         close_dx += boid.x - otherboid.x
                         close_dy += boid.y - otherboid.y
 
-                    # If not in protected range, is the boid in the visual range?
+                    # Apply field of view + weights
                     elif squared_distance < self.visual_range_squared:
-                        # Add other boid's x/y-coord and x/y vel to accumulator variables
-                        xpos_avg += otherboid.x
-                        ypos_avg += otherboid.y
-                        xvel_avg += otherboid.vx
-                        yvel_avg += otherboid.vy
+                        distance = math.sqrt(squared_distance) + 1e-9
+
+                        # In which direction is the neighbor relative to me?
+                        rx = -dx
+                        ry = -dy
+                        # Calculate cosine of the included angle
+                        cosine = (rx * hx + ry * hy) / distance  # >0 ahead/<0 behind
+                        if cosine < self.fieldofview:
+                            continue
+
+                        # Front-weighting-neighbors ahead influence more!
+                        w = 1.0 + self.front_weight * max(0.0, cosine)
+                        weight_sum += w
+
+                        xpos_avg += w * otherboid.x
+                        ypos_avg += w * otherboid.y
+                        xvel_avg += w * otherboid.vx
+                        yvel_avg += w * otherboid.vy
 
                         # Increment number of boids within visual range
                         neighboring_boids += 1
 
+                        # Crowded ahead-slow down/crowded behind-speed up
+                        front_pressure += max(0.0, cosine) / distance
+                        back_pressure += max(0.0, -cosine) / distance
+
+                        # Turning depends on left/right placement
+                        leftright = (rx * px + ry * py) / distance
+                        turn_drive += w * (leftright / distance)
+
             # If there were any boids in the visual range
-            if neighboring_boids > 0:
-                # Divide accumulator variables by number of boids in visual range
-                xpos_avg = xpos_avg / neighboring_boids
-                ypos_avg = ypos_avg / neighboring_boids
-                xvel_avg = xvel_avg / neighboring_boids
-                yvel_avg = yvel_avg / neighboring_boids
+            if neighboring_boids > 0 and weight_sum > 0:
+                # Weighted averages instead of plain averages
+                xpos_avg = xpos_avg / weight_sum
+                ypos_avg = ypos_avg / weight_sum
+                xvel_avg = xvel_avg / weight_sum
+                yvel_avg = yvel_avg / weight_sum
 
                 # Add the centering/matching contributions to velocity
                 boid.vx = (boid.vx +
@@ -119,9 +157,33 @@ class BoidsSimulation:
             if boid.y < self.topmargin:
                 boid.vy = boid.vy + self.turnfactor
 
-            # Calculate the boid's speed
-            speed = math.sqrt(boid.vx * boid.vx + boid.vy * boid.vy)
+            # Rotate velocity slightly based on left/right drive
+            dtheta = self.turning_control * turn_drive
+            if dtheta > self.max_turn:
+                dtheta = self.max_turn
+            elif dtheta < -self.max_turn:
+                dtheta = -self.max_turn
 
+            cosd = math.cos(dtheta)
+            sind = math.sin(dtheta)
+            vx_new = boid.vx * cosd - boid.vy * sind
+            vy_new = boid.vx * sind + boid.vy * cosd
+            boid.vx, boid.vy = vx_new, vy_new
+
+            # Speed up if crowded behind / slow down if crowded ahead
+            speed_bias = self.speed_control * (back_pressure - front_pressure)
+            speednow = math.sqrt(boid.vx * boid.vx + boid.vy * boid.vy) + 1e-9
+            target_speed = speednow + speed_bias
+
+            # Apply by scaling velocity-keeps direction
+            if target_speed > 0:
+                scale = target_speed / speednow
+                boid.vx *= scale
+                boid.vy *= scale
+                speed = target_speed
+            else:
+                speed = speednow
+                
             # Enforce min and max speeds
             if speed < self.minspeed:
                 boid.vx = (boid.vx / speed) * self.minspeed
