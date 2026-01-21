@@ -28,6 +28,11 @@ class BoidsSimulation:
         self.turning_control = 0.05
         self.max_turn = 0.15
 
+        # Milling
+        self.use_milling = True # can switch off
+        self.swirl_strength = 0.15
+        self.centroid_pull = 0.0008
+
         # Screen dimensions
         self.width = width
         self.height = height
@@ -54,6 +59,11 @@ class BoidsSimulation:
 
     def update(self):
         """Update all boids for one timestep"""
+        # Centroid
+        if self.use_milling:
+            cx = sum(b.x for b in self.boids) / len(self.boids)
+            cy = sum(b.y for b in self.boids) / len(self.boids)
+
         for boid in self.boids:
             # Heading frame
             speed0 = math.sqrt(boid.vx * boid.vx + boid.vy * boid.vy) + 1e-9
@@ -183,7 +193,23 @@ class BoidsSimulation:
                 speed = target_speed
             else:
                 speed = speednow
-                
+
+            # Milling
+            if self.use_milling:
+                dx_c = cx - boid.x
+                dy_c = cy - boid.y
+                dist_c = math.sqrt(dx_c * dx_c + dy_c * dy_c) + 1e-9
+
+                # Tangential direction
+                tx = -dy_c / dist_c
+                ty = dx_c / dist_c
+
+                # Add swirl
+                boid.vx += self.swirl_strength * tx
+                boid.vy += self.swirl_strength * ty
+                boid.vx += self.centroid_pull * dx_c
+                boid.vy += self.centroid_pull * dy_c
+
             # Enforce min and max speeds
             if speed < self.minspeed:
                 boid.vx = (boid.vx / speed) * self.minspeed
