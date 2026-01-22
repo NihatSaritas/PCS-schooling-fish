@@ -38,12 +38,15 @@ class BoidsSimulation:
         self.minspeed = 2
 
         # Predator parameters
+        self.num_preds = num_preds
         self.turn_factor_pred = 0.2
+        self.visual_range_pred = 60
         self.predatory_range = 100
+        self.predator_weight = 0.1
+        self.avoid_factor_pred = 0.1
         self.maxspeed_pred = 3
         self.minspeed_pred = 2
-        self.predator_weight = 0.1
-        self.num_preds = num_preds
+        
 
         """Inspired additions by Katz-et-all"""
         self.fieldofview_degrees = 170 # small blind zone behind
@@ -287,7 +290,7 @@ class BoidsSimulation:
                 pred_dx = boid.x - predator.x
                 pred_dy = boid.y - predator.y
 
-                if math.sqrt(pred_dx * pred_dx + pred_dy * pred_dy) < self.predatory_range:
+                if math.sqrt(pred_dx * pred_dx + pred_dy * pred_dy) < self.visual_range_pred:
                     if pred_dx > 0:
                         predator.vx += self.predator_weight
                     if pred_dx < 0:
@@ -306,6 +309,26 @@ class BoidsSimulation:
                 predator.vy -= self.turn_factor_pred
             if predator.y < self.topmargin:
                 predator.vy += self.turn_factor_pred
+
+            # Avoid overlapping between sharks
+            if self.num_preds > 1:
+                for otherpredator in self.predators:
+                    if predator is otherpredator:
+                        continue
+                    
+                    # Compute differences in x and y coordinates
+                    dx = predator.x - otherpredator.x
+                    dy = predator.y - otherpredator.y
+
+                    if math.sqrt(dx * dx + dy * dy) < self.visual_range_pred:
+                        if dx > 0:
+                            predator.vx += self.avoid_factor_pred
+                        if dx < 0:
+                            predator.vx -= self.avoid_factor_pred
+                        if dy > 0:
+                            predator.vy += self.avoid_factor_pred
+                        if dy < 0:
+                            predator.vy -= self.avoid_factor_pred
 
             # Enforce min and max speeds
             predator_speed = math.sqrt(predator.vx * predator.vx + predator.vy * predator.vy)
