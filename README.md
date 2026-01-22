@@ -26,10 +26,10 @@ python boids_hunteradams.py
 
 ### Field of View (Katz et al. inspired)
 - **fieldofview_degrees**: 170° - Field of view (small blind zone behind)
-- **front_weight**: 0.3 - Weight given to neighbors ahead
-- **speed_control**: 0.03 - Speed adjustment based on crowding
-- **turning_control**: 0.05 - Turning response to lateral neighbors
-- **max_turn**: 0.15 - Maximum turn angle per timestep
+- **front_weight**: 0.3 - Extra influence of neighbours in front  (‘front–back asymmetry in social interactions’)
+- **speed_control**: 0.03 - Speed change from crowding (computed from neighbour density ahead vs behind)
+- **turning_control**: 0.05 - Turning from left/right density difference (computed in the fish’s body frame)
+- **max_turn**: 0.15 - Limits turning per step to keep motion smooth
 
 ### Predator Parameters
 - **num_preds**: 1 (default) - Number of predators
