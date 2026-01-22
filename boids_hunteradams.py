@@ -57,7 +57,7 @@ class BoidsSimulation:
         self.height = height
 
         # Margins for turning
-        self.margin = max(0.2 * width, 0.2 * height)
+        self.margin = int(max(0.2 * width, 0.2 * height))
         self.leftmargin = self.margin
         self.rightmargin = width - self.margin
         self.topmargin = self.margin
