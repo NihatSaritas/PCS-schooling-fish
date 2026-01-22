@@ -195,10 +195,13 @@ class SettingsWindow:
         _, self.entry_num_preds = self.create_input_row(agent_frame, row=2, text='number of predators:',
                                                         value=self.visualizer.sim.num_preds)
 
-        _, self.entry_triangle_size = self.create_input_row(agent_frame, row=3, text='triangle size:',
+        _, self.entry_triangle_size = self.create_input_row(agent_frame, row=3, text='boid triangle size:',
                                                         value=self.visualizer.triangle_size)
 
-        self.add_splitter(agent_frame, row=4)
+        _, self.entry_pred_triangle_size = self.create_input_row(agent_frame, row=4, text='predator triangle size:',
+                                                        value=self.visualizer.pred_triangle_size)
+
+        self.add_splitter(agent_frame, row=5)
 
     def apply_agent_changes(self):
         """Applies changes entered in the agent configuration fields."""
@@ -214,6 +217,9 @@ class SettingsWindow:
 
         self.visualizer.triangle_size = self.handle_input(self.entry_triangle_size, minval=1, maxval=200,
                                                           type_func=int, fallback=self.visualizer.triangle_size)
+
+        self.visualizer.pred_triangle_size = self.handle_input(self.entry_pred_triangle_size, minval=1, maxval=200,
+                                                          type_func=int, fallback=self.visualizer.pred_triangle_size)
 
     def create_stat_frame(self):
         """Applies changes entered into the stat configuration field."""

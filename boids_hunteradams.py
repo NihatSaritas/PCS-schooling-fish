@@ -503,5 +503,5 @@ def terminate(sig, _):
 if __name__ == "__main__":
     # Run the simulation with visualization
     signal.signal(signal.SIGINT, terminate)
-    BoidsVisualizer(num_boids=100, num_preds=0, width=640, height=480)
+    BoidsVisualizer(num_boids=100, num_preds=1, width=640, height=480)
     #BoidsVisualizer(num_boids=300, width=300, height=300)
