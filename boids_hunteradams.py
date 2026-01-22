@@ -103,13 +103,21 @@ class BoidsSimulation:
             self.boids = self.boids[0:self.num_boids]
 
     def edit_pred_count(self):
-        print(f'simulation pred edit called, expected numer: {self.num_preds}')
-        pass
+        while(len(self.predators) < self.num_preds):
+            x = random.uniform(0, self.width)
+            y = random.uniform(0, self.height)
+            vx = random.uniform(-self.maxspeed_pred, self.maxspeed_pred)
+            vy = random.uniform(-self.maxspeed_pred, self.maxspeed_pred)
+            self.predators.append(Predator(x, y, vx, vy))
+
+        if len(self.predators) > self.num_preds:      
+            self.predators = self.predators[0:self.num_preds]
 
     def edit_fov(self):
         """Subwindow updates FOV in degrees. This function is called to update the parameter."""
         self.fieldofview = math.cos(math.radians(self.fieldofview_degrees))
         print(f'fov:{self.fieldofview_degrees}° -> {self.fieldofview}')
+        #TODO: input is 360 to 0, in code divice by 2 
 
     def update(self):
         """Update all boids and predators for one timestep"""
@@ -424,7 +432,6 @@ class BoidsVisualizer:
         self.root.mainloop()
 
     def edit_boid_count(self):
-        self.canvas.delete(0, tk.END)
         for triangle in self.triangles:
             self.canvas.delete(triangle)
         self.sim.edit_boid_count()
@@ -434,10 +441,14 @@ class BoidsVisualizer:
             self.triangles.append(triangle)
 
     def edit_pred_count(self):
-        print(f'visualizer pred edit called, expected numer: {self.sim.num_preds}')
         # Redraw canvas here, edit predators themselves in function below
+        for triangle in self.triangles_pred:
+            self.canvas.delete(triangle)
         self.sim.edit_pred_count()
-        pass
+        self.triangles_pred = []
+        for _ in self.sim.predators:
+            triangle = self.canvas.create_polygon(0, 0, 0, 0, 0, 0, fill='red', outline='darkblue')
+            self.triangles_pred.append(triangle)
 
     def get_triangle_points(self, boid, size):
         """Calculate triangle vertices based on boid position and velocity"""

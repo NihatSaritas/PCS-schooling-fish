@@ -211,7 +211,7 @@ class SettingsWindow:
                                                           type_func=int, fallback=self.visualizer.sim.num_boids)
         self.visualizer.edit_boid_count()
 
-        self.visualizer.sim.num_preds = self.handle_input(self.entry_num_preds, minval=1, maxval=10**5,
+        self.visualizer.sim.num_preds = self.handle_input(self.entry_num_preds, minval=0, maxval=10**5,
                                                           type_func=int, fallback=self.visualizer.sim.num_preds)
         self.visualizer.edit_pred_count()
 
