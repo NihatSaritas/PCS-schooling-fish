@@ -14,8 +14,17 @@ class Boid:
         self.vx = vx
         self.vy = vy
 
+class Predator:
+    """Represents a single predator in the simulation."""
+
+    def __init__(self, x, y, vx, vy):
+        self.x = x
+        self.y = y
+        self.vx = vx
+        self.vy = vy
+
 class BoidsSimulation:
-    def __init__(self, num_boids=50, width=640, height=480):
+    def __init__(self, num_boids=50, num_preds=1, width=640, height=480):
         # Tunable parameters
         self.num_boids = num_boids
         self.turn_factor = 0.2
@@ -26,6 +35,13 @@ class BoidsSimulation:
         self.matching_factor = 0.05
         self.maxspeed = 3
         self.minspeed = 2
+
+        # Predator parameters
+        self.turn_factor_pred = 0.2
+        self.predatory_range = 100
+        self.maxspeed_pred = 3
+        self.minspeed_pred = 2
+        self.predator_weight = 0.1
 
         """Inspired additions by Katz-et-all"""
         self.fieldofview_degrees = 170 # small blind zone behind
@@ -58,6 +74,15 @@ class BoidsSimulation:
             vx = random.uniform(-self.maxspeed, self.maxspeed)
             vy = random.uniform(-self.maxspeed, self.maxspeed)
             self.boids.append(Boid(x, y, vx, vy))
+
+        # Initialize predators with random positions and velocities
+        self.predators = []
+        for _ in range(num_preds):
+            x = random.uniform(0, width)
+            y = random.uniform(0, height)
+            vx = random.uniform(-self.maxspeed_pred, self.maxspeed_pred)
+            vy = random.uniform(-self.maxspeed_pred, self.maxspeed_pred)
+            self.predators.append(Predator(x, y, vx, vy))
 
     def edit_boid_count(self):
         """Removes or adds boids until number of boids match the (edited) parameter. Additions
@@ -172,6 +197,21 @@ class BoidsSimulation:
             boid.vx = boid.vx + (close_dx * self.avoid_factor)
             boid.vy = boid.vy + (close_dy * self.avoid_factor)
 
+            # Predator avoidance
+            for predator in self.predators:
+                pred_dx = boid.x - predator.x
+                pred_dy = boid.y - predator.y
+
+                if math.sqrt(pred_dx * pred_dx + pred_dy * pred_dy) < self.predatory_range:
+                    if pred_dx > 0:
+                        boid.vx += self.predator_weight
+                    if pred_dx < 0:
+                        boid.vx -= self.predator_weight
+                    if pred_dy > 0:
+                        boid.vy += self.predator_weight
+                    if pred_dy < 0:
+                        boid.vy -= self.predator_weight
+
             # If the boid is near an edge, make it turn by turn_factor
             if boid.x < self.leftmargin:
                 boid.vx = boid.vx + self.turn_factor
@@ -236,6 +276,59 @@ class BoidsSimulation:
                 boid.y = self.height
                 boid.vy = -abs(boid.vy)
 
+        for predator in self.predators:
+            for boid in self.boids:
+                pred_dx = boid.x - predator.x
+                pred_dy = boid.y - predator.y
+
+                if math.sqrt(pred_dx * pred_dx + pred_dy * pred_dy) < self.predatory_range:
+                    if pred_dx > 0:
+                        predator.vx += self.predator_weight
+                    if pred_dx < 0:
+                        predator.vx -= self.predator_weight
+                    if pred_dy > 0:
+                        predator.vy += self.predator_weight
+                    if pred_dy < 0:
+                        predator.vy -= self.predator_weight
+
+            # If the predator is near an edge, make it turn by turnfactor
+            if predator.x < self.leftmargin:
+                predator.vx += self.turn_factor_pred
+            if predator.x > self.rightmargin:
+                predator.vx -= self.turn_factor_pred
+            if predator.y > self.bottommargin:
+                predator.vy -= self.turn_factor_pred
+            if predator.y < self.topmargin:
+                predator.vy += self.turn_factor_pred
+
+            # Enforce min and max speeds
+            predator_speed = math.sqrt(predator.vx * predator.vx + predator.vy * predator.vy)
+            if predator_speed < self.minspeed_pred:
+                predator.vx = (predator.vx / predator_speed) * self.minspeed_pred
+                predator.vy = (predator.vy / predator_speed) * self.minspeed_pred
+            if predator_speed > self.maxspeed_pred:
+                predator.vx = (predator.vx / predator_speed) * self.maxspeed_pred
+                predator.vy = (predator.vy / predator_speed) * self.maxspeed_pred
+
+            # Update predators's position
+            predator.x += predator.vx
+            predator.y += predator.vy
+
+            # Hard wall constraint
+            if predator.x < 0:
+                predator.x = 0
+                predator.vx = abs(predator.vx)
+            elif predator.x > self.width:
+                predator.x = self.width
+                predator.vx = -abs(predator.vx)
+
+            if predator.y < 0:
+                predator.y = 0
+                predator.vy = abs(predator.vy)
+            elif predator.y > self.height:
+                predator.y = self.height
+                predator.vy = -abs(predator.vy)
+
     def get_states(self):
         """Return numpy arrays of boid positions and velocities."""
         count = len(self.boids)
@@ -254,8 +347,8 @@ class BoidsSimulation:
 
 
 class BoidsVisualizer:
-    def __init__(self, num_boids=100, width=640, height=480):
-        self.sim = BoidsSimulation(num_boids, width, height)
+    def __init__(self, num_boids=100, num_preds=1, width=640, height=480):
+        self.sim = BoidsSimulation(num_boids, num_preds, width, height)
 
         # Create tkinter window
         self.root = tk.Tk()
@@ -282,6 +375,12 @@ class BoidsVisualizer:
         for _ in self.sim.boids:
             triangle = self.canvas.create_polygon(0, 0, 0, 0, 0, 0, fill='blue', outline='darkblue')
             self.triangles.append(triangle)
+
+        # Store triangle IDs for each predator
+        self.triangles_pred = []
+        for _ in self.sim.predators:
+            triangle_pred = self.canvas.create_polygon(0, 0, 0, 0, 0, 0, fill='red', outline='darkred')
+            self.triangles_pred.append(triangle_pred)
 
         # Initialize frame counter and tunable x range for stats window.
         self.frame = 1
@@ -330,10 +429,15 @@ class BoidsVisualizer:
         # Update simulation
         self.sim.update()
 
-        # Update each triangle
+        # Update each boid triangle
         for i, boid in enumerate(self.sim.boids):
             points = self.get_triangle_points(boid)
             self.canvas.coords(self.triangles[i], *points)
+        
+        # Update each predator triangle
+        for j, predator in enumerate(self.sim.predators):
+            points = self.get_triangle_points(predator)
+            self.canvas.coords(self.triangles_pred[j], *points)
 
         if self.stats_open:
             self.stats.update()
