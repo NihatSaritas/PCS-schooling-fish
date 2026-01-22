@@ -28,11 +28,11 @@ class BoidsSimulation:
     def __init__(self, num_boids=50, num_preds=1, width=640, height=480):
         # Tunable parameters
         self.num_boids = num_boids
-        self.turnfactor = 0.2
+        self.turn_factor = 0.2
         self.visual_range = 40
         self.protected_range = 8
         self.centering_factor = 0.0005
-        self.avoidfactor = 0.07
+        self.avoid_factor = 0.07
         self.matching_factor = 0.05
         self.maxspeed = 3
         self.minspeed = 2
@@ -195,8 +195,8 @@ class BoidsSimulation:
                            (yvel_avg - boid.vy) * self.matching_factor)
 
             # Add the avoidance contribution to velocity
-            boid.vx = boid.vx + (close_dx * self.avoidfactor)
-            boid.vy = boid.vy + (close_dy * self.avoidfactor)
+            boid.vx = boid.vx + (close_dx * self.avoid_factor)
+            boid.vy = boid.vy + (close_dy * self.avoid_factor)
             
             # Predator avoidance
             for predator in self.predators:
@@ -215,13 +215,13 @@ class BoidsSimulation:
 
             # If the boid is near an edge, make it turn by turn_factor
             if boid.x < self.leftmargin:
-                boid.vx = boid.vx + self.turnfactor
+                boid.vx = boid.vx + self.turn_factor
             if boid.x > self.rightmargin:
-                boid.vx = boid.vx - self.turnfactor
+                boid.vx = boid.vx - self.turn_factor
             if boid.y > self.bottommargin:
-                boid.vy = boid.vy - self.turnfactor
+                boid.vy = boid.vy - self.turn_factor
             if boid.y < self.topmargin:
-                boid.vy = boid.vy + self.turnfactor
+                boid.vy = boid.vy + self.turn_factor
 
             # Rotate velocity slightly based on left/right drive
             dtheta = self.turning_control * turn_drive
@@ -292,7 +292,7 @@ class BoidsSimulation:
                     if pred_dy < 0:
                         predator.vy -= self.predator_weight
 
-            # If the predator is near an edge, make it turn by turnfactor
+            # If the predator is near an edge, make it turn by turn_factor
             if predator.x < self.leftmargin:
                 predator.vx += self.turn_factor_pred
             if predator.x > self.rightmargin:
@@ -389,6 +389,7 @@ class BoidsVisualizer:
         # Tunable parameters
         self.triangle_size = 3
         self.stat_xrange = 2000  # For stat window only
+        self.triangle_size = 3
 
         # Start animation
         self.animate()
@@ -404,8 +405,9 @@ class BoidsVisualizer:
             triangle = self.canvas.create_polygon(0, 0, 0, 0, 0, 0, fill='blue', outline='darkblue')
             self.triangles.append(triangle)
 
-    def get_triangle_points(self, boid, size=3):
+    def get_triangle_points(self, boid):
         """Calculate triangle vertices based on boid position and velocity"""
+        size = self.triangle_size
         # Calculate angle from velocity
         angle = math.atan2(boid.vy, boid.vx)
 
