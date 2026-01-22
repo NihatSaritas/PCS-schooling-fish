@@ -1,0 +1,4 @@
+__pycache__/*
+/boid_simulation_subclasses/__pycache__
+.idea/
+.DS_Store
