@@ -393,8 +393,8 @@ class BoidsVisualizer:
 
         # Tunable parameters
         self.triangle_size = 3
+        self.pred_triangle_size = 5
         self.stat_xrange = 2000  # For stat window only
-        self.triangle_size = 3
 
         # Start animation
         self.animate()
@@ -416,9 +416,8 @@ class BoidsVisualizer:
         self.sim.edit_pred_count()
         pass
 
-    def get_triangle_points(self, boid):
+    def get_triangle_points(self, boid, size):
         """Calculate triangle vertices based on boid position and velocity"""
-        size = self.triangle_size
         # Calculate angle from velocity
         angle = math.atan2(boid.vy, boid.vx)
 
@@ -443,12 +442,12 @@ class BoidsVisualizer:
 
         # Update each boid triangle
         for i, boid in enumerate(self.sim.boids):
-            points = self.get_triangle_points(boid)
+            points = self.get_triangle_points(boid, self.triangle_size)
             self.canvas.coords(self.triangles[i], *points)
         
         # Update each predator triangle
         for j, predator in enumerate(self.sim.predators):
-            points = self.get_triangle_points(predator)
+            points = self.get_triangle_points(predator, self.pred_triangle_size)
             self.canvas.coords(self.triangles_pred[j], *points)
 
         if self.stats_open:
