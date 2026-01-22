@@ -43,6 +43,7 @@ class BoidsSimulation:
         self.maxspeed_pred = 3
         self.minspeed_pred = 2
         self.predator_weight = 0.1
+        self.num_preds = num_preds
 
         """Inspired additions by Katz-et-all"""
         self.fieldofview_degrees = 170 # small blind zone behind
@@ -78,7 +79,7 @@ class BoidsSimulation:
 
         # Initialize predators with random positions and velocities
         self.predators = []
-        for _ in range(num_preds):
+        for _ in range(self.num_preds):
             x = random.uniform(0, width)
             y = random.uniform(0, height)
             vx = random.uniform(-self.maxspeed_pred, self.maxspeed_pred)
@@ -97,6 +98,10 @@ class BoidsSimulation:
 
         if len(self.boids) > self.num_boids:      
             self.boids = self.boids[0:self.num_boids]
+
+    def edit_pred_count(self):
+        print(f'simulation pred edit called, expected numer: {self.num_preds}')
+        pass
 
     def edit_fov(self):
         """Subwindow updates FOV in degrees. This function is called to update the parameter."""
@@ -405,6 +410,12 @@ class BoidsVisualizer:
             triangle = self.canvas.create_polygon(0, 0, 0, 0, 0, 0, fill='blue', outline='darkblue')
             self.triangles.append(triangle)
 
+    def edit_pred_count(self):
+        print(f'visualizer pred edit called, expected numer: {self.sim.num_preds}')
+        # Redraw canvas here, edit predators themselves in function below
+        self.sim.edit_pred_count()
+        pass
+
     def get_triangle_points(self, boid):
         """Calculate triangle vertices based on boid position and velocity"""
         size = self.triangle_size
@@ -493,5 +504,5 @@ def terminate(sig, _):
 if __name__ == "__main__":
     # Run the simulation with visualization
     signal.signal(signal.SIGINT, terminate)
-    BoidsVisualizer(num_boids=100, num_preds=2, width=640, height=480)
+    BoidsVisualizer(num_boids=100, num_preds=0, width=640, height=480)
     #BoidsVisualizer(num_boids=300, width=300, height=300)

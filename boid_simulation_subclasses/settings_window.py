@@ -191,11 +191,14 @@ class SettingsWindow:
 
         _, self.entry_num_boids = self.create_input_row(agent_frame, row=1, text='number of boids:',
                                                         value=self.visualizer.sim.num_boids)
+        
+        _, self.entry_num_preds = self.create_input_row(agent_frame, row=2, text='number of predators:',
+                                                        value=self.visualizer.sim.num_preds)
 
-        _, self.entry_triangle_size = self.create_input_row(agent_frame, row=2, text='triangle size:',
+        _, self.entry_triangle_size = self.create_input_row(agent_frame, row=3, text='triangle size:',
                                                         value=self.visualizer.triangle_size)
 
-        self.add_splitter(agent_frame, row=3)
+        self.add_splitter(agent_frame, row=4)
 
     def apply_agent_changes(self):
         """Applies changes entered in the agent configuration fields."""
@@ -204,6 +207,10 @@ class SettingsWindow:
         self.visualizer.sim.num_boids = self.handle_input(self.entry_num_boids, minval=1, maxval=10**5,
                                                           type_func=int, fallback=self.visualizer.sim.num_boids)
         self.visualizer.edit_boid_count()
+
+        self.visualizer.sim.num_preds = self.handle_input(self.entry_num_preds, minval=1, maxval=10**5,
+                                                          type_func=int, fallback=self.visualizer.sim.num_preds)
+        self.visualizer.edit_pred_count()
 
         self.visualizer.triangle_size = self.handle_input(self.entry_triangle_size, minval=1, maxval=200,
                                                           type_func=int, fallback=self.visualizer.triangle_size)
