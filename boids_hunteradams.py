@@ -24,15 +24,6 @@ class Predator:
         self.vx = vx
         self.vy = vy
 
-class Predator:
-    """Represents a single predator in the simulation."""
-
-    def __init__(self, x, y, vx, vy):
-        self.x = x
-        self.y = y
-        self.vx = vx
-        self.vy = vy
-
 class BoidsSimulation:
     def __init__(self, num_boids=50, num_preds=1, width=640, height=480):
         # Tunable parameters
@@ -207,21 +198,6 @@ class BoidsSimulation:
             boid.vx = boid.vx + (close_dx * self.avoidfactor)
             boid.vy = boid.vy + (close_dy * self.avoidfactor)
             
-            # Predator avoidance
-            for predator in self.predators:
-                pred_dx = boid.x - predator.x
-                pred_dy = boid.y - predator.y
-
-                if math.sqrt(pred_dx * pred_dx + pred_dy * pred_dy) < self.predatory_range:
-                    if pred_dx > 0:
-                        boid.vx += self.predator_weight
-                    if pred_dx < 0:
-                        boid.vx -= self.predator_weight
-                    if pred_dy > 0:
-                        boid.vy += self.predator_weight
-                    if pred_dy < 0:
-                        boid.vy -= self.predator_weight
-
             # Predator avoidance
             for predator in self.predators:
                 pred_dx = boid.x - predator.x
@@ -469,7 +445,7 @@ class BoidsVisualizer:
         self.frame += 1
         self.root.after(self.delay, self.animate)
 
-def resize(self):
+    def resize(self):
         """Function in subclass updates width, height, and margin. This function resizes
         the canvas and computes new margin bounds."""
         self.sim.leftmargin = self.sim.margin
