@@ -443,7 +443,14 @@ class BoidsVisualizer:
 
         # Create canvas
         self.canvas = tk.Canvas(self.root, width=width, height=height, bg='white')
+        self.label = tk.Label(
+                self.root,
+                text=f"Number of boids: {self.sim.num_boids}",
+                font=("Arial", 14),
+                fg="darkblue",
+                bg="white")
         self.canvas.pack()
+        self.label.place(x=5, y=5)
 
         # Toggle buttons for ui/settings and stat visualization.
         self.stats_open = False
@@ -520,6 +527,8 @@ class BoidsVisualizer:
     def animate(self):
         """Update animation frame"""
         self.sim.update()
+        
+        self.label.config(text=f"Number of boids: {self.sim.num_boids}")
 
         # Remove eaten boids from simulation
         if len(self.sim.boid_index) > 0:
