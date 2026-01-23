@@ -14,6 +14,11 @@ python boids_hunteradams.py
 ## Parameters
 
 ### Boid Parameters
+| Parameter | Default | Description | Min | Max | Type
+|-|-|-|-|-|-|
+|**num_boids**|50|Number of fish in the simulation|1|$10^5$|<code>int</code>
+|**turn_factor**|0.2|Edge avoidance strength <br> (this is an example of newline in <br> table)|$10^{-6}$|1|<code>float</code>
+
 - **num_boids**: 50 (default) - Number of fish in the simulation
 - **visual_range**: 40 - Distance at which boids can see neighbors
 - **protected_range**: 8 - Minimum distance maintained between boids
@@ -44,4 +49,4 @@ python boids_hunteradams.py
 ### Display
 - **width**: 640 - Canvas width
 - **height**: 480 - Canvas height
-- **margin**: 20% of max(width, height) - Boundary margin for edge avoidance
+- **margin**: 20% of <code>max(width, height)</code> - Boundary margin for edge avoidance
