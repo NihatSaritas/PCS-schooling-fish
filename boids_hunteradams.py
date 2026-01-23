@@ -42,6 +42,7 @@ class BoidsSimulation:
         self.turn_factor_pred = 0.2
         self.visual_range_pred = 60
         self.predatory_range = 100
+        self.eating_range = 20
         self.predator_weight = 0.1
         self.avoid_factor_pred = 0.1
         self.maxspeed_pred = 3
@@ -293,11 +294,15 @@ class BoidsSimulation:
                 boid.y = self.height
                 boid.vy = -abs(boid.vy)
 
+        self.boid_index = set()
         for predator in self.predators:
+            boid_eaten = False
+            i = 0
             for boid in self.boids:
                 pred_dx = boid.x - predator.x
                 pred_dy = boid.y - predator.y
 
+                # Chasing after boid
                 if math.sqrt(pred_dx * pred_dx + pred_dy * pred_dy) < self.visual_range_pred:
                     if pred_dx > 0:
                         predator.vx += self.predator_weight
@@ -307,6 +312,14 @@ class BoidsSimulation:
                         predator.vy += self.predator_weight
                     if pred_dy < 0:
                         predator.vy -= self.predator_weight
+
+                    # A predator can eat one boid per frame if it's in eating range
+                    if math.sqrt(pred_dx * pred_dx + pred_dy * pred_dy) < self.eating_range and not boid_eaten:
+                        boid_eaten = True
+                        self.boid_index.add(i)
+                        self.num_boids -= 1
+
+                i += 1
 
             # If the predator is near an edge, make it turn by turn_factor
             if predator.x < self.leftmargin:
@@ -324,7 +337,6 @@ class BoidsSimulation:
                     if predator is otherpredator:
                         continue
                     
-                    # Compute differences in x and y coordinates
                     dx = predator.x - otherpredator.x
                     dy = predator.y - otherpredator.y
 
@@ -365,6 +377,12 @@ class BoidsSimulation:
             elif predator.y > self.height:
                 predator.y = self.height
                 predator.vy = -abs(predator.vy)
+
+        # Remove eaten boids
+        self.boid_index = sorted(self.boid_index, reverse=True)
+
+        for idx in self.boid_index:
+            del self.boids[idx]
 
     def get_states(self):
         """Return numpy arrays of boid positions and velocities."""
@@ -447,7 +465,7 @@ class BoidsVisualizer:
         self.sim.edit_pred_count()
         self.triangles_pred = []
         for _ in self.sim.predators:
-            triangle = self.canvas.create_polygon(0, 0, 0, 0, 0, 0, fill='red', outline='darkblue')
+            triangle = self.canvas.create_polygon(0, 0, 0, 0, 0, 0, fill='red', outline='darkred')
             self.triangles_pred.append(triangle)
 
     def get_triangle_points(self, boid, size):
@@ -473,6 +491,12 @@ class BoidsVisualizer:
     def animate(self):
         """Update animation frame"""
         self.sim.update()
+
+        # Remove eaten boids from simulation
+        if len(self.sim.boid_index) > 0:
+            for idx in self.sim.boid_index:
+                self.canvas.delete(self.triangles[idx])
+                del self.triangles[idx]
 
         # Update each boid triangle
         for i, boid in enumerate(self.sim.boids):
