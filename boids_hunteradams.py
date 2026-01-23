@@ -43,7 +43,7 @@ class BoidsSimulation:
         # Predator parameters
         self.num_preds = num_preds
         self.turn_factor_pred = 0.2
-        self.visual_range_pred = 160
+        self.visual_range_pred = 160  # TODO: picked 'random' high number, subject to change
         self.predatory_range = 100
         self.eating_range = 20
         self.predator_weight = 0.1
