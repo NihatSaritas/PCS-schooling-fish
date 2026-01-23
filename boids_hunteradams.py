@@ -432,8 +432,9 @@ class BoidsSimulation:
 
 
 class BoidsVisualizer:
-    def __init__(self, num_boids=100, num_preds=1, width=640, height=480, seed=None):
+    def __init__(self, num_boids=100, num_preds=1, width=640, height=480, seed=None, pause_after=-1):
         self.sim = BoidsSimulation(num_boids, num_preds, width, height, seed)
+        self.pause_after = pause_after
 
         # Create tkinter window
         self.root = tk.Tk()
@@ -442,16 +443,25 @@ class BoidsVisualizer:
         # Roughly 60 fps, but highly dependent on device and param configuration.
         self.delay = 16
 
+        # Initialize frame counter and tunable x range for stats window.
+        self.frame = 1
+
         # Create canvas
         self.canvas = tk.Canvas(self.root, width=width, height=height, bg='white')
-        self.label = tk.Label(
+        self.canvas.pack()
+
+        # Create 2 information fields for number of boids and the current frame.
+        self.label_num_boids = tk.Label(
                 self.root,
                 text=f"Number of boids: {self.sim.num_boids}",
-                font=("Arial", 14),
-                fg="darkblue",
-                bg="white")
-        self.canvas.pack()
-        self.label.place(x=5, y=5)
+                fg="darkblue")
+        self.label_num_boids.pack(side=tk.TOP, anchor='w')
+
+        self.label_num_frame = tk.Label(
+            self.root,
+            text=f"Frame number: {self.frame}",
+            fg="darkblue")
+        self.label_num_frame.pack(side=tk.TOP, anchor='w')
 
         # Toggle buttons for ui/settings and stat visualization.
         self.stats_open = False
@@ -473,9 +483,6 @@ class BoidsVisualizer:
         for _ in self.sim.predators:
             triangle_pred = self.canvas.create_polygon(0, 0, 0, 0, 0, 0, fill='red', outline='darkred')
             self.triangles_pred.append(triangle_pred)
-
-        # Initialize frame counter and tunable x range for stats window.
-        self.frame = 1
 
         # Tunable parameters
         self.triangle_size = 3
@@ -527,9 +534,15 @@ class BoidsVisualizer:
 
     def animate(self):
         """Update animation frame"""
+        if self.pause_after != -1:  # i.e. if not set to run indefinitely
+            if self.pause_after == 0:
+                self.root.quit()
+            else:
+                self.pause_after -= 1
+
         self.sim.update()
-        
-        self.label.config(text=f"Number of boids: {self.sim.num_boids}")
+        self.label_num_boids.config(text=f"Number of boids: {self.sim.num_boids}")
+        self.label_num_frame.config(text=f"Frame number: {self.frame}")
 
         # Remove eaten boids from simulation
         if len(self.sim.boid_index) > 0:
@@ -553,6 +566,10 @@ class BoidsVisualizer:
         # Schedule next frame (approximately 60 FPS)
         self.frame += 1
         self.root.after(self.delay, self.animate)
+
+    def resume(self, pause_after=-1):
+        self.pause_after = pause_after
+        self.root.mainloop()
 
     def resize(self):
         """Function in subclass updates width, height, and margin. This function resizes
@@ -587,6 +604,11 @@ class BoidsVisualizer:
             self.ui_button.config(bg='#74c476', activebackground='#41ab5d')
 
         self.ui_open = not self.ui_open
+
+    def close(self):
+        self.sim = None
+        self.root.destroy()
+        self.root = None
 
 SIM = None
 
