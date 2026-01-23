@@ -40,6 +40,7 @@ python boids_hunteradams.py
 - **num_preds**: 1 (default) - Number of predators
 - **visual_range_pred**: 60 - Predator vision range
 - **predatory_range**: 100 - Range where boids flee from predators
+- **eating_range** = 20 - Range where a predator can eat a boid
 - **predator_weight**: 0.1 - Strength of predator attraction/avoidance
 - **avoid_factor_pred**: 0.1 - Predator-to-predator avoidance
 - **maxspeed_pred**: 3 - Maximum predator speed
