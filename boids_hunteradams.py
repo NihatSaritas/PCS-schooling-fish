@@ -25,7 +25,7 @@ class Predator:
         self.vy = vy
 
 class BoidsSimulation:
-    def __init__(self, num_boids=50, num_preds=1, width=640, height=480):
+    def __init__(self, num_boids=50, num_preds=1, width=640, height=480, seed=None):
         # Tunable parameters
         self.num_boids = num_boids
         self.turn_factor = 0.2
@@ -36,8 +36,9 @@ class BoidsSimulation:
         self.matching_factor = 0.05
         self.maxspeed = 3
         self.minspeed = 2
-        random.seed(random.random())
-        random.seed(4)
+
+        if seed:
+            random.seed(seed)
 
         # Predator parameters
         self.num_preds = num_preds
@@ -431,8 +432,8 @@ class BoidsSimulation:
 
 
 class BoidsVisualizer:
-    def __init__(self, num_boids=100, num_preds=1, width=640, height=480):
-        self.sim = BoidsSimulation(num_boids, num_preds, width, height)
+    def __init__(self, num_boids=100, num_preds=1, width=640, height=480, seed=None):
+        self.sim = BoidsSimulation(num_boids, num_preds, width, height, seed)
 
         # Create tkinter window
         self.root = tk.Tk()
@@ -599,5 +600,5 @@ def terminate(sig, _):
 if __name__ == "__main__":
     # Run the simulation with visualization
     signal.signal(signal.SIGINT, terminate)
-    BoidsVisualizer(num_boids=50, num_preds=0, width=640, height=480)
+    BoidsVisualizer(num_boids=50, num_preds=1, width=640, height=480, seed=None)
     #BoidsVisualizer(num_boids=300, width=300, height=300)
