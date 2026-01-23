@@ -36,11 +36,13 @@ class BoidsSimulation:
         self.matching_factor = 0.05
         self.maxspeed = 3
         self.minspeed = 2
+        random.seed(random.random())
+        random.seed(4)
 
         # Predator parameters
         self.num_preds = num_preds
         self.turn_factor_pred = 0.2
-        self.visual_range_pred = 60
+        self.visual_range_pred = 160
         self.predatory_range = 100
         self.eating_range = 20
         self.predator_weight = 0.1
@@ -50,8 +52,8 @@ class BoidsSimulation:
         
 
         """Inspired additions by Katz-et-all"""
-        self.fieldofview_degrees = 170 # small blind zone behind
-        self.fieldofview = math.cos(math.radians(self.fieldofview_degrees))
+        self.fieldofview_degrees = 340 # small blind zone behind
+        self.fieldofview = math.cos(math.radians(self.fieldofview_degrees/2))
         self.front_weight = 0.3
         self.speed_control = 0.03
         self.turning_control = 0.05
@@ -386,6 +388,10 @@ class BoidsSimulation:
     def get_state_arrays(self):
         """Return numpy arrays of boid positions and velocities."""
         count = len(self.boids)
+
+        if count == 0:
+            return 1, 0
+
         px = np.zeros(count, dtype=np.float64)
         py = np.zeros(count, dtype=np.float64)
         vx = np.zeros(count, dtype=np.float64)
@@ -584,5 +590,5 @@ def terminate(sig, _):
 if __name__ == "__main__":
     # Run the simulation with visualization
     signal.signal(signal.SIGINT, terminate)
-    BoidsVisualizer(num_boids=100, num_preds=1, width=640, height=480)
+    BoidsVisualizer(num_boids=50, num_preds=0, width=640, height=480)
     #BoidsVisualizer(num_boids=300, width=300, height=300)

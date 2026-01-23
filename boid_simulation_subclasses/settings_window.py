@@ -5,6 +5,10 @@ import tkinter as tk
 from tkinter import ttk
 
 
+# Ensures all left columns are consistent width, as a result the
+# right columns are then all aligned.
+MIN_WIDTH = 28
+
 class SettingsWindow:
     def __init__(self, visualizer):
         # Reference to parent, needed to update changed parameters.
@@ -37,7 +41,7 @@ class SettingsWindow:
     def create_input_row(self, frame, row, text, value):
         """Creates label with name of changed parameter and an tkinter entry widget for
         user input."""
-        label = tk.Label(frame, text=text)
+        label = tk.Label(frame, text=text, width=MIN_WIDTH, anchor='w')
         label.grid(row=row, column=0, sticky='W')
         entry = tk.Entry(frame)
         entry.grid(row=row, column=1)
@@ -99,7 +103,9 @@ class SettingsWindow:
         self.add_splitter(boid_frame, row=14)
 
     def apply_boid_changes(self):
-        """Applies changes entered in the boid configuration frame."""
+        """Applies changes entered in the boid configuration frame. If input is invalid, it replaces it with the internal
+        variable value, which is either the default or last put valid input. If input is too large or too small, it clips
+        the value. See the README on min and max values for each parameter."""
         self.visualizer.sim.turn_factor = self.handle_input(self.entry_turn_factor, minval=10**-6, maxval=1,
                                                             type_func=float, fallback=self.visualizer.sim.turn_factor)
 
@@ -126,7 +132,7 @@ class SettingsWindow:
 
         self.visualizer.sim.fieldofview_degrees = self.handle_input(self.entry_fieldofview, minval=0, maxval=360,
                                                                 type_func=float, fallback=self.visualizer.sim.fieldofview_degrees)
-        self.visualizer.sim.edit_fov()
+        self.visualizer.sim.edit_fov()  # Needed to recompute internal cosine from the input in degrees
 
         self.visualizer.sim.front_weight = self.handle_input(self.entry_front_weight, minval=10**-6, maxval=1,
                                                                 type_func=float, fallback=self.visualizer.sim.front_weight)
