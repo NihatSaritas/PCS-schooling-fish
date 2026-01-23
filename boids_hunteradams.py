@@ -115,9 +115,8 @@ class BoidsSimulation:
 
     def edit_fov(self):
         """Subwindow updates FOV in degrees. This function is called to update the parameter."""
-        self.fieldofview = math.cos(math.radians(self.fieldofview_degrees))
+        self.fieldofview = math.cos(math.radians(self.fieldofview_degrees/2))
         print(f'fov:{self.fieldofview_degrees}° -> {self.fieldofview}')
-        #TODO: input is 360 to 0, in code divice by 2 
 
     def update(self):
         """Update all boids and predators for one timestep"""
@@ -366,7 +365,7 @@ class BoidsSimulation:
                 predator.y = self.height
                 predator.vy = -abs(predator.vy)
 
-    def get_states(self):
+    def get_state_arrays(self):
         """Return numpy arrays of boid positions and velocities."""
         count = len(self.boids)
         px = np.zeros(count, dtype=np.float64)
@@ -381,6 +380,30 @@ class BoidsSimulation:
             vy[i] = boid.vy
 
         return px, py, vx, vy
+    
+    def get_stats(self):
+        px, py, vx, vy = self.get_state_arrays()
+        # Compute the polarization. See README for details.
+        d = np.column_stack([vx, vy])
+        lengths = np.linalg.norm(d, axis=1, keepdims=True)
+        dnorm = d / lengths
+        polarization = np.linalg.norm(np.mean(dnorm, axis=0))
+
+        # Compute the milling index. See README for details.
+        p = np.column_stack([px, py])
+        barycenter = np.mean(p, axis=0)
+        xbar = px - barycenter[0]
+        ybar = py - barycenter[1]
+        theta = np.atan2(ybar, xbar)
+
+        barycenter_d = np.mean(d, axis=0)
+        barvx = vx - barycenter_d[0]
+        barvy = vy - barycenter_d[1]
+        phi = np.atan2(barvy, barvx)
+
+        milling_index = np.abs(np.mean(np.sin(phi - theta)))
+
+        return polarization, milling_index
 
 
 class BoidsVisualizer:

@@ -69,8 +69,8 @@ class StatWindow:
 
 
     def resize(self):
-        """Function in other subclass updates the xrange. This function resizes
-        the datastructures accordingly."""
+        """Function in other subclass updates the x range of the sliding window. 
+        This function resizes the datastructures accordingly."""
         self.ax.set_xlim((self.x[0] if self.x else 1, max(self.x[0] + self.visualizer.stat_xrange, self.x[-1])))
         if len(self.x) > self.visualizer.stat_xrange:
             drop_first_n = len(self.x) - self.visualizer.stat_xrange
@@ -79,27 +79,7 @@ class StatWindow:
             self.milling_index = self.milling_index[drop_first_n:]
 
     def update(self):
-        px, py, vx, vy = self.visualizer.sim.get_states()
-
-        # Compute the polarization. See README for details.
-        d = np.column_stack([vx, vy])
-        lengths = np.linalg.norm(d, axis=1, keepdims=True)
-        dnorm = d / lengths
-        polarization = np.linalg.norm(np.mean(dnorm, axis=0))
-
-        # Compute the milling index. See README for details.
-        p = np.column_stack([px, py])
-        barycenter = np.mean(p, axis=0)
-        xbar = px - barycenter[0]
-        ybar = py - barycenter[1]
-        theta = np.atan2(ybar, xbar)
-
-        barycenter_d = np.mean(d, axis=0)
-        barvx = vx - barycenter_d[0]
-        barvy = vy - barycenter_d[1]
-        phi = np.atan2(barvy, barvx)
-
-        milling_index = np.abs(np.mean(np.sin(phi - theta)))
+        polarization, milling_index = self.visualizer.sim.get_stats()
 
         # Update data structures
         self.x.append(self.visualizer.frame)
