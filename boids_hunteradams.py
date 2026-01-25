@@ -23,6 +23,9 @@ class Predator:
         self.y = y
         self.vx = vx
         self.vy = vy
+        self.is_eating = False
+        self.eating_timer = 0
+        self.eating_duration = 60  # frames (~1 second at 60 FPS)
 
 class BoidsSimulation:
     def __init__(self, num_boids=50, num_preds=1, width=640, height=480, seed=None):
@@ -298,14 +301,26 @@ class BoidsSimulation:
 
         self.boid_index = set()
         for predator in self.predators:
+            # Handle eating state
+            if predator.is_eating:
+                predator.eating_timer -= 1
+                if predator.eating_timer <= 0:
+                    predator.is_eating = False
+                else:
+                    # Stay completely stationary while eating
+                    continue
+            
             boid_eaten = False
+            fish_in_range = False
             i = 0
             for boid in self.boids:
                 pred_dx = boid.x - predator.x
                 pred_dy = boid.y - predator.y
+                distance = math.sqrt(pred_dx * pred_dx + pred_dy * pred_dy)
 
                 # Chasing after boid
-                if math.sqrt(pred_dx * pred_dx + pred_dy * pred_dy) < self.visual_range_pred:
+                if distance < self.visual_range_pred:
+                    fish_in_range = True
                     if pred_dx > 0:
                         predator.vx += self.predator_weight
                     if pred_dx < 0:
@@ -316,12 +331,23 @@ class BoidsSimulation:
                         predator.vy -= self.predator_weight
 
                     # A predator can eat one boid per frame if it's in eating range
-                    if math.sqrt(pred_dx * pred_dx + pred_dy * pred_dy) < self.eating_range and not boid_eaten:
+                    if distance < self.eating_range and not boid_eaten:
                         boid_eaten = True
                         self.boid_index.add(i)
                         self.num_boids -= 1
+                        # Start eating state - predator stops
+                        predator.is_eating = True
+                        predator.eating_timer = predator.eating_duration
+                        predator.vx = 0
+                        predator.vy = 0
+                        # Break out to skip rest of movement logic this frame
+                        break
 
                 i += 1
+            
+            # If predator just started eating, skip rest of movement logic
+            if predator.is_eating:
+                continue
 
             # If the predator is near an edge, make it turn by turn_factor
             if predator.x < self.leftmargin:
@@ -354,12 +380,18 @@ class BoidsSimulation:
 
             # Enforce min and max speeds
             predator_speed = math.sqrt(predator.vx * predator.vx + predator.vy * predator.vy)
-            if predator_speed < self.minspeed_pred:
-                predator.vx = (predator.vx / predator_speed) * self.minspeed_pred
-                predator.vy = (predator.vy / predator_speed) * self.minspeed_pred
-            if predator_speed > self.maxspeed_pred:
-                predator.vx = (predator.vx / predator_speed) * self.maxspeed_pred
-                predator.vy = (predator.vy / predator_speed) * self.maxspeed_pred
+            if predator_speed > 0:  # Avoid division by zero
+                if predator_speed < self.minspeed_pred:
+                    predator.vx = (predator.vx / predator_speed) * self.minspeed_pred
+                    predator.vy = (predator.vy / predator_speed) * self.minspeed_pred
+                if predator_speed > self.maxspeed_pred:
+                    predator.vx = (predator.vx / predator_speed) * self.maxspeed_pred
+                    predator.vy = (predator.vy / predator_speed) * self.maxspeed_pred
+            else:
+                # If predator has no velocity (shouldn't happen outside eating), give it random direction
+                angle = random.uniform(0, 2 * math.pi)
+                predator.vx = self.minspeed_pred * math.cos(angle)
+                predator.vy = self.minspeed_pred * math.sin(angle)
 
             # Update predators's position
             predator.x += predator.vx
