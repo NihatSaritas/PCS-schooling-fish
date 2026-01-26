@@ -35,6 +35,8 @@ class EatingExperiment:
         num_boids: int = 50,
         num_preds: int = 1,
         matching_factor: float = 0.05,
+        avoid_factor: float = 0.07,
+        centering_factor: float = 0.0005,
         seed: int = None,
         width: int = 640,
         height: int = 480
@@ -65,6 +67,8 @@ class EatingExperiment:
         
         # Only modify the matching_factor (alignment parameter)
         sim.matching_factor = matching_factor
+        sim.avoid_factor = avoid_factor
+        sim.centering_factor = centering_factor
         
         # Track eating over time
         initial_boids = num_boids
@@ -99,6 +103,8 @@ class EatingExperiment:
                 'num_boids': num_boids,
                 'num_preds': num_preds,
                 'matching_factor': matching_factor,
+                'avoid_factor': avoid_factor,
+                'centering_factor': centering_factor,
                 'seed': seed
             },
             'time_points': time_points,
@@ -154,7 +160,7 @@ class EatingExperiment:
         for i, result in enumerate(self.results):
             time_seconds = np.array(result['time_points']) / 60.0  # Convert frames to seconds
             params = result['params']
-            label = f"matching_factor={params['matching_factor']}"
+            label = f"matching={params['matching_factor']}, avoid={params['avoid_factor']}, centering={params['centering_factor']}"
             
             ax1.plot(time_seconds, result['fish_eaten'], marker='o', markersize=3, label=label)
         
@@ -168,7 +174,7 @@ class EatingExperiment:
         for i, result in enumerate(self.results):
             time_seconds = np.array(result['time_points']) / 60.0
             params = result['params']
-            label = f"matching_factor={params['matching_factor']}"
+            label = f"matching={params['matching_factor']}, avoid={params['avoid_factor']}, centering={params['centering_factor']}"
             
             ax2.plot(time_seconds, result['fish_remaining'], marker='o', markersize=3, label=label)
         
@@ -240,12 +246,14 @@ def example_experiments():
     experiment = EatingExperiment(duration_frames=6000)
     
     # Define parameter sets to test - only varying matching_factor
-    param_sets = [
+    param_sets_alignment = [
         # Very low alignment (nearly independent movement)
         {
             'num_boids': 50,
             'num_preds': 1,
             'matching_factor': 0.01,
+            'avoid_factor': 0.07,
+            'centering_factor': 0.0005,
             'seed': 42
         },
         # Low alignment
@@ -253,6 +261,8 @@ def example_experiments():
             'num_boids': 50,
             'num_preds': 1,
             'matching_factor': 0.03,
+            'avoid_factor': 0.07,
+            'centering_factor': 0.0005,
             'seed': 42
         },
         # Default alignment (from boids_hunteradams.py)
@@ -260,6 +270,8 @@ def example_experiments():
             'num_boids': 50,
             'num_preds': 1,
             'matching_factor': 0.05,
+            'avoid_factor': 0.07,
+            'centering_factor': 0.0005,
             'seed': 42
         },
         # Higher alignment
@@ -267,6 +279,8 @@ def example_experiments():
             'num_boids': 50,
             'num_preds': 1,
             'matching_factor': 0.10,
+            'avoid_factor': 0.07,
+            'centering_factor': 0.0005,
             'seed': 42
         },
         # Very high alignment (strong schooling)
@@ -274,18 +288,116 @@ def example_experiments():
             'num_boids': 50,
             'num_preds': 1,
             'matching_factor': 0.20,
+            'avoid_factor': 0.07,
+            'centering_factor': 0.0005,
+            'seed': 42
+        }
+    ]
+
+    param_sets_seperation = [
+        # Very low alignment (nearly independent movement)
+        {
+            'num_boids': 50,
+            'num_preds': 1,
+            'matching_factor': 0.05,
+            'avoid_factor': 0.01,
+            'centering_factor': 0.0005,
+            'seed': 42
+        },
+        # Low alignment
+        {
+            'num_boids': 50,
+            'num_preds': 1,
+            'matching_factor': 0.05,
+            'avoid_factor': 0.03,
+            'centering_factor': 0.0005,
+            'seed': 42
+        },
+        # Default alignment (from boids_hunteradams.py)
+        {
+            'num_boids': 50,
+            'num_preds': 1,
+            'matching_factor': 0.05,
+            'avoid_factor': 0.07,
+            'centering_factor': 0.0005,
+            'seed': 42
+        },
+        # Higher alignment
+        {
+            'num_boids': 50,
+            'num_preds': 1,
+            'matching_factor': 0.05,
+            'avoid_factor': 0.10,
+            'centering_factor': 0.0005,
+            'seed': 42
+        },
+        # Very high alignment (strong schooling)
+        {
+            'num_boids': 50,
+            'num_preds': 1,
+            'matching_factor': 0.05,
+            'avoid_factor': 0.20,
+            'centering_factor': 0.0005,
+            'seed': 42
+        }
+    ]
+
+    param_sets_cohesion = [
+        # Very low alignment (nearly independent movement)
+        {
+            'num_boids': 50,
+            'num_preds': 1,
+            'matching_factor': 0.05,
+            'avoid_factor': 0.07,
+            'centering_factor': 0.0001,
+            'seed': 42
+        },
+        # Low alignment
+        {
+            'num_boids': 50,
+            'num_preds': 1,
+            'matching_factor': 0.05,
+            'avoid_factor': 0.07,
+            'centering_factor': 0.0003,
+            'seed': 42
+        },
+        # Default alignment (from boids_hunteradams.py)
+        {
+            'num_boids': 50,
+            'num_preds': 1,
+            'matching_factor': 0.05,
+            'avoid_factor': 0.07,
+            'centering_factor': 0.0005,
+            'seed': 42
+        },
+        # Higher alignment
+        {
+            'num_boids': 50,
+            'num_preds': 1,
+            'matching_factor': 0.05,
+            'avoid_factor': 0.07,
+            'centering_factor': 0.0010,
+            'seed': 42
+        },
+        # Very high alignment (strong schooling)
+        {
+            'num_boids': 50,
+            'num_preds': 1,
+            'matching_factor': 0.05,
+            'avoid_factor': 0.07,
+            'centering_factor': 0.0020,
             'seed': 42
         }
     ]
     
     # Run experiments
-    results = experiment.run_multiple_experiments(param_sets)
+    results = experiment.run_multiple_experiments(param_sets_cohesion)
     
     # Save results
-    experiment.save_results_to_csv('eating_experiment_results.csv')
+    experiment.save_results_to_csv('cohesion_eating_experiment_results.csv')
     
     # Plot results
-    experiment.plot_results(save_path='eating_experiment_plot.png')
+    experiment.plot_results(save_path='cohesion_eating_experiment_plot.png')
     
     return experiment
 
