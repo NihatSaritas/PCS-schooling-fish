@@ -25,7 +25,6 @@ class Predator:
         self.vy = vy
         self.is_eating = False
         self.eating_timer = 0
-        self.eating_duration = 60  # frames (~1 second at 60 FPS)
 
 class BoidsSimulation:
     def __init__(self, num_boids=50, num_preds=1, width=640, height=480, seed=None):
@@ -49,11 +48,12 @@ class BoidsSimulation:
         self.visual_range_pred = 160  # TODO: picked 'random' high number, subject to change
         self.predatory_range = 100
         self.eating_range = 20
-        self.predator_weight = 0.1
+        self.eating_duration = 60  # frames (~1 second at 60 FPS)
+        self.pred2fish_attraction = 0.1
+        self.fish2pred_avoidance = 0.15
         self.avoid_factor_pred = 0.1
-        self.maxspeed_pred = 3
-        self.minspeed_pred = 2
-        
+        self.maxspeed_pred = 3.3
+        self.minspeed_pred = 2.2
 
         """Inspired additions by Katz-et-all"""
         self.fieldofview_degrees = 340 # small blind zone behind
@@ -227,13 +227,13 @@ class BoidsSimulation:
 
                 if math.sqrt(pred_dx * pred_dx + pred_dy * pred_dy) < self.predatory_range:
                     if pred_dx > 0:
-                        boid.vx += self.predator_weight
+                        boid.vx += self.fish2pred_avoidance
                     if pred_dx < 0:
-                        boid.vx -= self.predator_weight
+                        boid.vx -= self.fish2pred_avoidance
                     if pred_dy > 0:
-                        boid.vy += self.predator_weight
+                        boid.vy += self.fish2pred_avoidance
                     if pred_dy < 0:
-                        boid.vy -= self.predator_weight
+                        boid.vy -= self.fish2pred_avoidance
 
             # If the boid is near an edge, make it turn by turn_factor
             if boid.x < self.leftmargin:
@@ -322,13 +322,13 @@ class BoidsSimulation:
                 if distance < self.visual_range_pred:
                     fish_in_range = True
                     if pred_dx > 0:
-                        predator.vx += self.predator_weight
+                        predator.vx += self.pred2fish_attraction
                     if pred_dx < 0:
-                        predator.vx -= self.predator_weight
+                        predator.vx -= self.pred2fish_attraction
                     if pred_dy > 0:
-                        predator.vy += self.predator_weight
+                        predator.vy += self.pred2fish_attraction
                     if pred_dy < 0:
-                        predator.vy -= self.predator_weight
+                        predator.vy -= self.pred2fish_attraction
 
                     # A predator can eat one boid per frame if it's in eating range
                     if distance < self.eating_range and not boid_eaten:
@@ -337,7 +337,7 @@ class BoidsSimulation:
                         self.num_boids -= 1
                         # Start eating state - predator stops
                         predator.is_eating = True
-                        predator.eating_timer = predator.eating_duration
+                        predator.eating_timer = self.eating_duration
                         predator.vx = 0
                         predator.vy = 0
                         # Break out to skip rest of movement logic this frame

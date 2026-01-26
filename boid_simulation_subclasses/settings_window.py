@@ -7,7 +7,7 @@ from tkinter import ttk
 
 # Ensures all left columns are consistent width, as a result the
 # right columns are then all aligned.
-MIN_WIDTH = 28
+MIN_WIDTH = 35
 
 class SettingsWindow:
     def __init__(self, visualizer):
@@ -21,8 +21,9 @@ class SettingsWindow:
 
         # Setup the configuration frames.
         self.create_boid_frame()
-        self.create_tank_frame()
+        self.create_pred_frame()
         self.create_agent_frame()
+        self.create_tank_frame()
         self.create_stat_frame()
 
         # Ensures toggle button is triggered when window is closed with x.
@@ -58,7 +59,7 @@ class SettingsWindow:
         boid_frame = tk.Frame(self.ui_win)
         boid_frame.grid(row=0, column=0, sticky='EW', padx=0, pady=0)
 
-        self.create_frame_header(boid_frame, title='Boid configuration:', btntext='Apply',
+        self.create_frame_header(boid_frame, title='Fish configuration:', btntext='Apply',
                                  btnfunc=self.apply_boid_changes)
 
         _, self.entry_turn_factor = self.create_input_row(boid_frame, row=1, text='turn factor:',
@@ -146,10 +147,81 @@ class SettingsWindow:
         self.visualizer.sim.max_turn = self.handle_input(self.entry_max_turn, minval=10**-6, maxval=1,
                                                                 type_func=float, fallback=self.visualizer.sim.max_turn)
 
+    def create_pred_frame(self):
+        pred_frame = tk.Frame(self.ui_win)
+        pred_frame.grid(row=1, column=0, sticky='EW', padx=0, pady=0)
+
+        self.create_frame_header(pred_frame, title='Predator configuration:', btntext='Apply',
+                                 btnfunc=self.apply_pred_changes)
+
+        _, self.entry_turn_factor_pred = self.create_input_row(pred_frame, row=1, text='turn factor:',
+                                                          value=self.visualizer.sim.turn_factor_pred)
+        
+        _, self.entry_visual_range_pred = self.create_input_row(pred_frame, row=2, text='visual range:',
+                                                           value=self.visualizer.sim.visual_range_pred)
+    
+        _, self.entry_predatory_range = self.create_input_row(pred_frame, row=3, text='predatory range:',
+                                                       value=self.visualizer.sim.predatory_range)
+        
+        _, self.entry_eating_range = self.create_input_row(pred_frame, row=4, text='eating range:',
+                                                       value=self.visualizer.sim.eating_range)
+        
+        _, self.entry_eating_duration = self.create_input_row(pred_frame, row=5, text='eating duration:',
+                                                       value=self.visualizer.sim.eating_duration)
+
+        _, self.entry_avoid_factor_pred = self.create_input_row(pred_frame, row=6, text='avoid factor (pred2pred):',
+                                                           value=self.visualizer.sim.avoid_factor_pred)
+        
+        _, self.pred2fish_attraction = self.create_input_row(pred_frame, row=7, text='pred2fish attract factor:',
+                                                           value=self.visualizer.sim.pred2fish_attraction)
+
+        _, self.fish2pred_avoidance = self.create_input_row(pred_frame, row=8, text='fish2pred avoid factor:',
+                                                           value=self.visualizer.sim.fish2pred_avoidance)
+
+        _, self.entry_maxspeed_pred = self.create_input_row(pred_frame, row=9, text='maximum speed:',
+                                                       value=self.visualizer.sim.maxspeed_pred)
+
+        _, self.entry_minspeed_pred = self.create_input_row(pred_frame, row=10, text='minimum speed:',
+                                                       value=self.visualizer.sim.minspeed_pred)
+        
+        self.add_splitter(pred_frame, row=14)
+
+    def apply_pred_changes(self):
+        """Applies changes entered in the tank configuration fields.""" 
+        self.visualizer.sim.turn_factor_pred = self.handle_input(self.entry_turn_factor_pred, minval=10**-6, maxval=1,
+                                                            type_func=float, fallback=self.visualizer.sim.turn_factor_pred)
+        
+        self.visualizer.sim.visual_range_pred = self.handle_input(self.entry_visual_range_pred, minval=0, maxval=10**6,
+                                                            type_func=float, fallback=self.visualizer.sim.visual_range_pred)
+    
+        self.visualizer.sim.predatory_range = self.handle_input(self.entry_predatory_range, minval=0, maxval=10**6,
+                                                            type_func=float, fallback=self.visualizer.sim.predatory_range)
+        
+        self.visualizer.sim.eating_range = self.handle_input(self.entry_eating_range, minval=0, maxval=10**6,
+                                                            type_func=int, fallback=self.visualizer.sim.eating_range)
+        
+        self.visualizer.sim.eating_duration = self.handle_input(self.entry_eating_duration, minval=0, maxval=10**6,
+                                                            type_func=int, fallback=self.visualizer.sim.eating_duration)
+
+        self.visualizer.sim.avoid_factor_pred = self.handle_input(self.entry_avoid_factor_pred, minval=10**-6, maxval=1,
+                                                            type_func=float, fallback=self.visualizer.sim.avoid_factor_pred)
+        
+        self.visualizer.sim.pred2fish_attraction = self.handle_input(self.pred2fish_attraction, minval=-1, maxval=1,
+                                                            type_func=float, fallback=self.visualizer.sim.pred2fish_attraction)
+
+        self.visualizer.sim.fish2pred_avoidance = self.handle_input(self.fish2pred_avoidance, minval=-1, maxval=1,
+                                                            type_func=float, fallback=self.visualizer.sim.fish2pred_avoidance)
+
+        self.visualizer.sim.minspeed_pred = self.handle_input(self.entry_minspeed_pred, minval=10**-6, maxval=10**6,
+                                                            type_func=float, fallback=self.visualizer.sim.minspeed_pred)
+        
+        self.visualizer.sim.maxspeed_pred = self.handle_input(self.entry_maxspeed_pred, minval=self.visualizer.sim.minspeed_pred, 
+                                                            maxval=10**6, type_func=float, fallback=self.visualizer.sim.maxspeed_pred)
+
     def create_tank_frame(self):
         """Create confiuration frame for the tank."""
         tank_frame = tk.Frame(self.ui_win)
-        tank_frame.grid(row=1, column=0, sticky='EW', padx=0, pady=0)
+        tank_frame.grid(row=2, column=0, sticky='EW', padx=0, pady=0)
 
         self.create_frame_header(tank_frame, title='Tank configuration:', btntext='Apply & Resize',
                                  btnfunc=self.apply_tank_changes)
@@ -190,7 +262,7 @@ class SettingsWindow:
     def create_agent_frame(self):
         """Create confiuration frame for agents."""
         agent_frame = tk.Frame(self.ui_win)
-        agent_frame.grid(row=2, column=0, sticky='EW', padx=0, pady=0)
+        agent_frame.grid(row=3, column=0, sticky='EW', padx=0, pady=0)
 
         self.create_frame_header(agent_frame, title='Agent configuration:', btntext='Apply',
                                  btnfunc=self.apply_agent_changes)
@@ -230,7 +302,7 @@ class SettingsWindow:
     def create_stat_frame(self):
         """Applies changes entered into the stat configuration field."""
         stat_frame = tk.Frame(self.ui_win)
-        stat_frame.grid(row=3, column=0, sticky='EW', padx=0, pady=0)
+        stat_frame.grid(row=4, column=0, sticky='EW', padx=0, pady=0)
 
         self.create_frame_header(stat_frame, title='Stat configuration:', btntext='Apply',
                                  btnfunc=self.apply_stat_changes)
@@ -239,6 +311,10 @@ class SettingsWindow:
                                                         value=self.visualizer.stat_xrange)
 
         #self.add_splitter(stat_frame, row=2)
+
+    def handle_boid_eaten(self):
+        self.entry_num_boids.delete(0, tk.END)
+        self.entry_num_boids.insert(0, self.visualizer.sim.num_boids)
 
     def apply_stat_changes(self):
         self.visualizer.stat_xrange = self.handle_input(self.entry_xrange, minval=10, maxval=10**5,
