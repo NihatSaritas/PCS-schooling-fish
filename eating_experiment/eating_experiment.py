@@ -20,7 +20,7 @@ class EatingExperiment:
     Runs eating experiments with various parameters and tracks eating behavior.
     """
     
-    def __init__(self, duration_frames: int = 6000):
+    def __init__(self, duration_frames: int = 6000, repetitions: int = 10):
         """
         Initialize the eating experiment.
         
@@ -29,6 +29,7 @@ class EatingExperiment:
         """
         self.duration_frames = duration_frames
         self.results = []
+        self.repetitions = repetitions
         
     def run_experiment(
         self,
@@ -130,12 +131,26 @@ class EatingExperiment:
         for i, params in enumerate(param_sets):
             print(f"Running experiment {i+1}/{len(param_sets)}...")
             print(f"  Parameters: {params}")
+
+            avg_fish_eaten = []
+            avg_fish_remaining = []
             
-            result = self.run_experiment(**params)
-            results.append(result)
+            for j in range(self.repetitions):
+                result = self.run_experiment(**params)
+                params['seed'] += 1
+            
+                avg_fish_eaten.append(result['fish_eaten'][-1])
+                avg_fish_remaining.append(result['fish_remaining'][-1])
+            
+            results.append({'params': params, 
+                            'last_time_point': result['time_points'][-1],
+                            'average_fish_eaten': avg_fish_eaten,
+                            'average_fish_remaining': avg_fish_remaining,
+                            'initial_boids': result['initial_boids']})
             
             # Print summary
-            final_eaten = result['fish_eaten'][-1]
+            # final_eaten = result['fish_eaten'][-1]
+            final_eaten = avg_fish_eaten
             final_frame = result['time_points'][-1]
             print(f"  Result: {final_eaten}/{result['initial_boids']} fish eaten by frame {final_frame}")
             print()
@@ -157,28 +172,35 @@ class EatingExperiment:
         fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 10))
         
         # Plot 1: Fish eaten over time
+        fish_eaten = []
+        changing_values = []
         for i, result in enumerate(self.results):
-            time_seconds = np.array(result['time_points']) / 60.0  # Convert frames to seconds
+
+            # time_seconds = np.array(result['time_points']) / 60.0  # Convert frames to seconds
             params = result['params']
-            label = f"matching={params['matching_factor']}, avoid={params['avoid_factor']}, centering={params['centering_factor']}"
-            
-            ax1.plot(time_seconds, result['fish_eaten'], marker='o', markersize=3, label=label)
+            changing_values.append(params[f'{changing}_factor'])
+            fish_eaten.append(result['average_fish_eaten'])
         
-        ax1.set_xlabel('Time (seconds)', fontsize=12)
+        ax1.boxplot(fish_eaten, tick_labels=changing_values)
+
+        # ax1.plot(time_seconds, result['fish_eaten'], marker='o', markersize=3, label=label)
+        ax1.set_xlabel(f'Change in {changing}_factor', fontsize=12)
         ax1.set_ylabel('Number of Fish Eaten', fontsize=12)
         ax1.set_title('Fish Eaten Over Time', fontsize=14, fontweight='bold')
-        ax1.legend(fontsize=9, loc='best')
+        # ax1.legend(fontsize=9, loc='best')
         ax1.grid(True, alpha=0.3)
         
         # Plot 2: Fish remaining over time
+        fish_remaining = []
         for i, result in enumerate(self.results):
-            time_seconds = np.array(result['time_points']) / 60.0
+            # time_seconds = np.array(result['time_points']) / 60.0
             params = result['params']
-            label = f"matching={params['matching_factor']}, avoid={params['avoid_factor']}, centering={params['centering_factor']}"
-            
-            ax2.plot(time_seconds, result['fish_remaining'], marker='o', markersize=3, label=label)
-        
-        ax2.set_xlabel('Time (seconds)', fontsize=12)
+            fish_remaining.append(result['average_fish_remaining'])
+
+        ax2.boxplot(fish_remaining, labels=changing_values)
+        # ax2.plot(time_seconds, result['fish_remaining'], marker='o', markersize=3, label=label)
+    
+        ax2.set_xlabel(f'Change in {changing}_factor', fontsize=12)
         ax2.set_ylabel('Number of Fish Remaining', fontsize=12)
         ax2.set_title('Fish Remaining Over Time', fontsize=14, fontweight='bold')
         ax2.legend(fontsize=9, loc='best')
@@ -217,33 +239,33 @@ class EatingExperiment:
             # Write data
             for exp_id, result in enumerate(self.results):
                 params = result['params']
-                for frame, eaten, remaining in zip(
-                    result['time_points'],
-                    result['fish_eaten'],
-                    result['fish_remaining']
-                ):
-                    writer.writerow([
-                        exp_id,
-                        params['num_boids'],
-                        params['num_preds'],
-                        params['matching_factor'],
-                        params['seed'],
-                        frame,
-                        frame / 60.0,  # Convert to seconds
-                        eaten,
-                        remaining
-                    ])
+                # for frame, eaten, remaining in zip(
+                #     result['time_points'],
+                #     result['fish_eaten'],
+                #     result['fish_remaining']
+                # ):
+                #     writer.writerow([
+                #         exp_id,
+                #         params['num_boids'],
+                #         params['num_preds'],
+                #         params['matching_factor'],
+                #         params['seed'],
+                #         frame,
+                #         frame / 60.0,  # Convert to seconds
+                #         eaten,
+                #         remaining
+                #     ])
         
         print(f"Results saved to {filepath}")
 
 
-def example_experiments():
+def example_experiments(repetitions):
     """
     Example: Run experiments with different matching_factor (alignment) values.
     All other parameters use defaults from boids_hunteradams.py.
     """
     # Initialize experiment
-    experiment = EatingExperiment(duration_frames=6000)
+    experiment = EatingExperiment(duration_frames=6000, repetitions=repetitions)
     
     # Define parameter sets to test - only varying matching_factor
     param_sets_alignment = [
@@ -291,7 +313,43 @@ def example_experiments():
             'avoid_factor': 0.07,
             'centering_factor': 0.0005,
             'seed': 42
-        }
+        },
+
+        {
+            'num_boids': 50,
+            'num_preds': 1,
+            'matching_factor': 0.30,
+            'avoid_factor': 0.07,
+            'centering_factor': 0.0005,
+            'seed': 42
+        },
+
+        {
+            'num_boids': 50,
+            'num_preds': 1,
+            'matching_factor': 0.40,
+            'avoid_factor': 0.07,
+            'centering_factor': 0.0005,
+            'seed': 42
+        },
+
+        {
+            'num_boids': 50,
+            'num_preds': 1,
+            'matching_factor': 0.50,
+            'avoid_factor': 0.07,
+            'centering_factor': 0.0005,
+            'seed': 42
+        },
+        
+        {
+            'num_boids': 50,
+            'num_preds': 1,
+            'matching_factor': 0.60,
+            'avoid_factor': 0.07,
+            'centering_factor': 0.0005,
+            'seed': 42
+        },
     ]
 
     param_sets_seperation = [
@@ -391,13 +449,13 @@ def example_experiments():
     ]
     
     # Run experiments
-    results = experiment.run_multiple_experiments(param_sets_cohesion)
+    results = experiment.run_multiple_experiments(param_sets_alignment)
     
     # Save results
-    experiment.save_results_to_csv('cohesion_eating_experiment_results.csv')
+    experiment.save_results_to_csv(f'{changing}_eating_experiment_results.csv')
     
     # Plot results
-    experiment.plot_results(save_path='cohesion_eating_experiment_plot.png')
+    experiment.plot_results(save_path=f'{changing}_eating_experiment_plot.png')
     
     return experiment
 
@@ -409,6 +467,8 @@ if __name__ == '__main__':
     print()
     
     # Run example experiments
-    experiment = example_experiments()
+    changing = 'matching'
+    repetitions = 10
+    experiment = example_experiments(repetitions)
     
     print("\nExperiment complete!")
