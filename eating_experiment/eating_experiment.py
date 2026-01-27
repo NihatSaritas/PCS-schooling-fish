@@ -134,15 +134,17 @@ class EatingExperiment:
 
             avg_fish_eaten = []
             avg_fish_remaining = []
-            
+            repetition = []
             for j in range(self.repetitions):
                 result = self.run_experiment(**params)
                 params['seed'] += 1
             
                 avg_fish_eaten.append(result['fish_eaten'][-1])
                 avg_fish_remaining.append(result['fish_remaining'][-1])
+                repetition.append(j+1)
             
             results.append({'params': params, 
+                            'repetition': repetition,
                             'last_time_point': result['time_points'][-1],
                             'average_fish_eaten': avg_fish_eaten,
                             'average_fish_remaining': avg_fish_remaining,
@@ -203,7 +205,7 @@ class EatingExperiment:
         ax2.set_xlabel(f'Change in {changing}_factor', fontsize=12)
         ax2.set_ylabel('Number of Fish Remaining', fontsize=12)
         ax2.set_title('Fish Remaining Over Time', fontsize=14, fontweight='bold')
-        ax2.legend(fontsize=9, loc='best')
+        # ax2.legend(fontsize=9, loc='best')
         ax2.grid(True, alpha=0.3)
         
         plt.tight_layout()
@@ -232,29 +234,30 @@ class EatingExperiment:
             
             # Write header
             writer.writerow([
-                'experiment_id', 'num_boids', 'num_preds', 'matching_factor', 'seed',
-                'frame', 'time_seconds', 'fish_eaten', 'fish_remaining'
+                'experiment_id', 'repetition', 'num_boids', 'num_preds', 'matching_factor', 'avoid_factor', 'centering_factor', 'seed',
+                'fish_eaten', 'fish_remaining'
             ])
             
             # Write data
             for exp_id, result in enumerate(self.results):
                 params = result['params']
-                # for frame, eaten, remaining in zip(
-                #     result['time_points'],
-                #     result['fish_eaten'],
-                #     result['fish_remaining']
-                # ):
-                #     writer.writerow([
-                #         exp_id,
-                #         params['num_boids'],
-                #         params['num_preds'],
-                #         params['matching_factor'],
-                #         params['seed'],
-                #         frame,
-                #         frame / 60.0,  # Convert to seconds
-                #         eaten,
-                #         remaining
-                #     ])
+                for repetition, eaten, remaining in zip(
+                    result['repetition'],
+                    result['average_fish_eaten'],
+                    result['average_fish_remaining']
+                ):
+                    writer.writerow([
+                        exp_id,
+                        repetition,
+                        params['num_boids'],
+                        params['num_preds'],
+                        params['matching_factor'],
+                        params['avoid_factor'],
+                        params['centering_factor'],
+                        params['seed'],
+                        eaten,
+                        remaining
+                    ])
         
         print(f"Results saved to {filepath}")
 
@@ -472,8 +475,8 @@ if __name__ == '__main__':
     print()
     
     # Run example experiments
-    changing = 'matching'
-    repetitions = 10
+    changing = 'centering'
+    repetitions = 2
     experiment = example_experiments(repetitions)
     
     print("\nExperiment complete!")
