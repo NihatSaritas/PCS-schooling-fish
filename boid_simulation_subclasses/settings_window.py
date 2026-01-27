@@ -17,6 +17,11 @@ class SettingsWindow:
         # Setup tkinter window for ui.
         self.ui_win = tk.Toplevel(visualizer.root, padx=20, pady=10)
         self.ui_win.title('Settings / User Interface')
+        self.leftcol = tk.Frame(self.ui_win)
+        self.leftcol.grid(row=0, column=0, sticky='EWN', padx=(0,5), pady=0)
+        self.rightcol = tk.Frame(self.ui_win)
+        self.rightcol.grid(row=0, column=1, sticky='EWN', padx=(5,0), pady=0)
+
         # self.ui_win.geometry("400x800")
 
         # Setup the configuration frames.
@@ -56,8 +61,8 @@ class SettingsWindow:
 
     def create_boid_frame(self):
         """Create confiuration frame for boids."""
-        boid_frame = tk.Frame(self.ui_win)
-        boid_frame.grid(row=0, column=0, sticky='EW', padx=0, pady=0)
+        boid_frame = tk.Frame(self.leftcol)
+        boid_frame.grid(row=0, column=0, sticky='EWN', padx=0, pady=0)
 
         self.create_frame_header(boid_frame, title='Fish configuration:', btntext='Apply',
                                  btnfunc=self.apply_boid_changes)
@@ -148,8 +153,8 @@ class SettingsWindow:
                                                                 type_func=float, fallback=self.visualizer.sim.max_turn)
 
     def create_pred_frame(self):
-        pred_frame = tk.Frame(self.ui_win)
-        pred_frame.grid(row=1, column=0, sticky='EW', padx=0, pady=0)
+        pred_frame = tk.Frame(self.rightcol)
+        pred_frame.grid(row=0, column=0, sticky='EWN', padx=0, pady=0)
 
         self.create_frame_header(pred_frame, title='Predator configuration:', btntext='Apply',
                                  btnfunc=self.apply_pred_changes)
@@ -220,8 +225,8 @@ class SettingsWindow:
 
     def create_tank_frame(self):
         """Create confiuration frame for the tank."""
-        tank_frame = tk.Frame(self.ui_win)
-        tank_frame.grid(row=2, column=0, sticky='EW', padx=0, pady=0)
+        tank_frame = tk.Frame(self.leftcol)
+        tank_frame.grid(row=1, column=0, sticky='EW', padx=0, pady=0)
 
         self.create_frame_header(tank_frame, title='Tank configuration:', btntext='Apply & Resize',
                                  btnfunc=self.apply_tank_changes)
@@ -261,8 +266,8 @@ class SettingsWindow:
 
     def create_agent_frame(self):
         """Create confiuration frame for agents."""
-        agent_frame = tk.Frame(self.ui_win)
-        agent_frame.grid(row=3, column=0, sticky='EW', padx=0, pady=0)
+        agent_frame = tk.Frame(self.rightcol)
+        agent_frame.grid(row=1, column=0, sticky='EWN', padx=0, pady=0)
 
         self.create_frame_header(agent_frame, title='Agent configuration:', btntext='Apply',
                                  btnfunc=self.apply_agent_changes)
@@ -289,8 +294,6 @@ class SettingsWindow:
 
     def apply_agent_changes(self):
         """Applies changes entered in the agent configuration fields."""
-        pass
-
         self.visualizer.sim.num_boids = self.handle_input(self.entry_num_boids, minval=1, maxval=10**5,
                                                           type_func=int, fallback=self.visualizer.sim.num_boids)
         self.visualizer.edit_boid_count()
@@ -313,8 +316,8 @@ class SettingsWindow:
 
     def create_stat_frame(self):
         """Applies changes entered into the stat configuration field."""
-        stat_frame = tk.Frame(self.ui_win)
-        stat_frame.grid(row=4, column=0, sticky='EW', padx=0, pady=0)
+        stat_frame = tk.Frame(self.leftcol)
+        stat_frame.grid(row=3, column=0, sticky='EW', padx=0, pady=0)
 
         self.create_frame_header(stat_frame, title='Stat configuration:', btntext='Apply',
                                  btnfunc=self.apply_stat_changes)
