@@ -63,6 +63,10 @@ class BoidsSimulation:
         self.turning_control = 0.05
         self.max_turn = 0.15
 
+        # Shared parameter
+        self.random_factor = 0.25
+        self.random_freq = 0.15
+
         # Screen dimensions
         self.width = width
         self.height = height
@@ -252,6 +256,14 @@ class BoidsSimulation:
             elif dtheta < -self.max_turn:
                 dtheta = -self.max_turn
 
+            # Add random noise to turn if applicable.
+            random_event = random.uniform(0,1)
+            if random_event < self.random_freq:
+                # Reduce randomness in large schools.
+                strength = 1/neighboring_boids if neighboring_boids else 1
+                noise = strength * random.uniform(-self.random_factor, self.random_factor)
+                dtheta += noise
+
             cosd = math.cos(dtheta)
             sind = math.sin(dtheta)
             vx_new = boid.vx * cosd - boid.vy * sind
@@ -338,8 +350,6 @@ class BoidsSimulation:
                         # Start eating state - predator stops
                         predator.is_eating = True
                         predator.eating_timer = self.eating_duration
-                        predator.vx = 0
-                        predator.vy = 0
                         # Break out to skip rest of movement logic this frame
                         break
 
@@ -348,6 +358,16 @@ class BoidsSimulation:
             # If predator just started eating, skip rest of movement logic
             if predator.is_eating:
                 continue
+
+            # Add random noise (roaming behavior) if predator is not actively chasing.
+            if not fish_in_range:
+                noise = random.uniform(-self.random_factor, self.random_factor)
+                vx, vy = predator.vx, predator.vy
+                cosr = math.cos(noise)
+                sinr = math.sin(noise)
+
+                predator.vx = vx*cosr + vy*-sinr
+                predator.vy = vx*sinr + vy*cosr
 
             # If the predator is near an edge, make it turn by turn_factor
             if predator.x < self.leftmargin:

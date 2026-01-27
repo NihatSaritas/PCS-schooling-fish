@@ -278,8 +278,14 @@ class SettingsWindow:
 
         _, self.entry_pred_triangle_size = self.create_input_row(agent_frame, row=4, text='predator triangle size:',
                                                         value=self.visualizer.pred_triangle_size)
+        
+        _, self.entry_random_freq = self.create_input_row(agent_frame, row=5, text='randomness frequency',
+                                                        value=self.visualizer.sim.random_freq)
+        
+        _, self.entry_random_factor = self.create_input_row(agent_frame, row=6, text='random factor:',
+                                                        value=self.visualizer.sim.random_factor)
 
-        self.add_splitter(agent_frame, row=5)
+        self.add_splitter(agent_frame, row=7)
 
     def apply_agent_changes(self):
         """Applies changes entered in the agent configuration fields."""
@@ -298,6 +304,12 @@ class SettingsWindow:
 
         self.visualizer.pred_triangle_size = self.handle_input(self.entry_pred_triangle_size, minval=1, maxval=200,
                                                           type_func=int, fallback=self.visualizer.pred_triangle_size)
+        
+        self.visualizer.sim.random_freq = self.handle_input(self.entry_random_freq, minval=0, maxval=1,
+                                                          type_func=float, fallback=self.visualizer.sim.random_freq)
+        
+        self.visualizer.sim.random_factor = self.handle_input(self.entry_random_factor, minval=0, maxval=1,
+                                                          type_func=float, fallback=self.visualizer.sim.random_factor)
 
     def create_stat_frame(self):
         """Applies changes entered into the stat configuration field."""
