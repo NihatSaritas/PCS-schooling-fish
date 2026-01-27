@@ -71,7 +71,8 @@ class StatWindow:
     def resize(self):
         """Function in other subclass updates the x range of the sliding window. 
         This function resizes the datastructures accordingly."""
-        self.ax.set_xlim((self.x[0] if self.x else 1, max(self.x[0] + self.visualizer.stat_xrange, self.x[-1])))
+        self.ax.set_xlim((self.x[0] if self.x else 1, 
+                          max(self.x[0] + self.visualizer.stat_xrange, self.x[-1]) if self.x else self.visualizer.stat_xrange))
         if len(self.x) > self.visualizer.stat_xrange:
             drop_first_n = len(self.x) - self.visualizer.stat_xrange
             self.x = self.x[drop_first_n:]
