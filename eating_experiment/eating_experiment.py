@@ -20,16 +20,19 @@ class EatingExperiment:
     Runs eating experiments with various parameters and tracks eating behavior.
     """
     
-    def __init__(self, duration_frames: int = 6000, repetitions: int = 10):
+    def __init__(self, duration_frames: int = 6000, repetitions: int = 10, parameter_name: str = 'matching'):
         """
         Initialize the eating experiment.
         
         Args:
             duration_frames: Number of frames to run each experiment (default: 6000, ~100 seconds at 60fps)
+            repetitions: Number of times to repeat each parameter configuration
+            parameter_name: Which parameter to vary ('matching', 'avoid', 'centering')
         """
         self.duration_frames = duration_frames
         self.results = []
         self.repetitions = repetitions
+        self.parameter_name = parameter_name
         
     def run_experiment(
         self,
@@ -135,20 +138,27 @@ class EatingExperiment:
             avg_fish_eaten = []
             avg_fish_remaining = []
             repetition = []
+            # Store all time series data for each repetition
+            all_time_series = []
+            
             for j in range(self.repetitions):
-                result = self.run_experiment(**params)
-                params['seed'] += 1
+                # Use different seed for each repetition without mutating original params
+                run_params = params.copy()
+                run_params['seed'] = params['seed'] + j
+                result = self.run_experiment(**run_params)
             
                 avg_fish_eaten.append(result['fish_eaten'][-1])
                 avg_fish_remaining.append(result['fish_remaining'][-1])
                 repetition.append(j+1)
+                all_time_series.append(result)
             
             results.append({'params': params, 
                             'repetition': repetition,
                             'last_time_point': result['time_points'][-1],
                             'average_fish_eaten': avg_fish_eaten,
                             'average_fish_remaining': avg_fish_remaining,
-                            'initial_boids': result['initial_boids']})
+                            'initial_boids': result['initial_boids'],
+                            'all_time_series': all_time_series})
             
             # Print summary
             # final_eaten = result['fish_eaten'][-1]
@@ -162,7 +172,8 @@ class EatingExperiment:
     
     def plot_results(self, save_path: str = None):
         """
-        Plot eating behavior over time for all experiments.
+        Plot eating behavior as boxplots for all experiments.
+        Creates boxplots showing fish remaining at the final timestep for each parameter value.
         
         Args:
             save_path: Optional path to save the plot
@@ -171,42 +182,39 @@ class EatingExperiment:
             print("No results to plot. Run experiments first.")
             return
         
-        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 10))
+        # Get parameter name for labels
+        param_key = f'{self.parameter_name}_factor'
+        param_labels = {
+            'matching': 'Alignment',
+            'avoid': 'Separation', 
+            'centering': 'Cohesion'
+        }
+        param_display = param_labels.get(self.parameter_name, self.parameter_name.capitalize())
         
-        # Plot 1: Fish eaten over time
-        fish_eaten = []
-        changing_values = []
-        for i, result in enumerate(self.results):
-
-            # time_seconds = np.array(result['time_points']) / 60.0  # Convert frames to seconds
+        fig, ax = plt.subplots(1, 1, figsize=(12, 6))
+        
+        # Collect data for boxplot
+        fish_remaining_pct = []
+        param_values = []
+        
+        for result in self.results:
             params = result['params']
-            changing_values.append(params[f'{changing}_factor'])
-            fish_eaten.append(result['average_fish_eaten'])
+            param_value = params[param_key]
+            param_values.append(f'{param_value:.4f}')
+            
+            # Calculate percentage of fish remaining for each repetition
+            initial = result['initial_boids']
+            pct_remaining = [(remaining / initial) * 100 for remaining in result['average_fish_remaining']]
+            fish_remaining_pct.append(pct_remaining)
         
-        ax1.boxplot(fish_eaten, tick_labels=changing_values)
-
-        # ax1.plot(time_seconds, result['fish_eaten'], marker='o', markersize=3, label=label)
-        ax1.set_xlabel(f'Change in {changing}_factor', fontsize=12)
-        ax1.set_ylabel('Number of Fish Eaten', fontsize=12)
-        ax1.set_title('Fish Eaten Over Time', fontsize=14, fontweight='bold')
-        # ax1.legend(fontsize=9, loc='best')
-        ax1.grid(True, alpha=0.3)
-        
-        # Plot 2: Fish remaining over time
-        fish_remaining = []
-        for i, result in enumerate(self.results):
-            # time_seconds = np.array(result['time_points']) / 60.0
-            params = result['params']
-            fish_remaining.append(result['average_fish_remaining'])
-
-        ax2.boxplot(fish_remaining, tick_labels=changing_values)
-        # ax2.plot(time_seconds, result['fish_remaining'], marker='o', markersize=3, label=label)
-    
-        ax2.set_xlabel(f'Change in {changing}_factor', fontsize=12)
-        ax2.set_ylabel('Number of Fish Remaining', fontsize=12)
-        ax2.set_title('Fish Remaining Over Time', fontsize=14, fontweight='bold')
-        # ax2.legend(fontsize=9, loc='best')
-        ax2.grid(True, alpha=0.3)
+        # Plot boxplot
+        ax.boxplot(fish_remaining_pct, labels=param_values)
+        ax.set_xlabel(f'{param_display} Factor', fontsize=12)
+        ax.set_ylabel('Fish Remaining (%)', fontsize=12)
+        ax.set_title(f'Percentage of Fish Remaining - Varying {param_display}', fontsize=14, fontweight='bold')
+        ax.grid(True, alpha=0.3, axis='y')
+        ax.set_ylim(0, 100)
+        plt.setp(ax.xaxis.get_majorticklabels(), rotation=45, ha='right')
         
         plt.tight_layout()
         
@@ -262,19 +270,28 @@ class EatingExperiment:
         print(f"Results saved to {filepath}")
 
 
-def example_experiments(repetitions):
+def example_experiments(parameter_name: str = 'matching', repetitions: int = 10):
     """
-    Example: Run experiments with different matching_factor (alignment) values.
-    All other parameters use defaults from boids_hunteradams.py.
+    Example: Run experiments varying one parameter while keeping others at defaults.
+    
+    Args:
+        parameter_name: Which parameter to vary ('matching', 'avoid', 'centering')
+        repetitions: Number of repetitions per parameter value
+    
+    All other parameters use defaults from boids_hunteradams.py:
+    - matching_factor (alignment): 0.05
+    - avoid_factor (separation): 0.07
+    - centering_factor (cohesion): 0.0005
     """
     # Initialize experiment
-    experiment = EatingExperiment(duration_frames=6000, repetitions=repetitions)
+    # 10000 frames (~167 seconds at 60fps)
+    experiment = EatingExperiment(duration_frames=10000, repetitions=repetitions, parameter_name=parameter_name)
     
     # Define parameter sets to test - only varying matching_factor
     param_sets_alignment = [
         # Very low alignment (nearly independent movement)
         {
-            'num_boids': 50,
+            'num_boids': 100,
             'num_preds': 1,
             'matching_factor': 0.01,
             'avoid_factor': 0.07,
@@ -283,7 +300,7 @@ def example_experiments(repetitions):
         },
         # Low alignment
         {
-            'num_boids': 50,
+            'num_boids': 100,
             'num_preds': 1,
             'matching_factor': 0.03,
             'avoid_factor': 0.07,
@@ -292,7 +309,7 @@ def example_experiments(repetitions):
         },
         # Default alignment (from boids_hunteradams.py)
         {
-            'num_boids': 50,
+            'num_boids': 100,
             'num_preds': 1,
             'matching_factor': 0.05,
             'avoid_factor': 0.07,
@@ -301,7 +318,7 @@ def example_experiments(repetitions):
         },
         # Higher alignment
         {
-            'num_boids': 50,
+            'num_boids': 100,
             'num_preds': 1,
             'matching_factor': 0.10,
             'avoid_factor': 0.07,
@@ -310,7 +327,7 @@ def example_experiments(repetitions):
         },
         # Very high alignment (strong schooling)
         {
-            'num_boids': 50,
+            'num_boids': 100,
             'num_preds': 1,
             'matching_factor': 0.20,
             'avoid_factor': 0.07,
@@ -319,7 +336,7 @@ def example_experiments(repetitions):
         },
 
         {
-            'num_boids': 50,
+            'num_boids': 100,
             'num_preds': 1,
             'matching_factor': 0.30,
             'avoid_factor': 0.07,
@@ -328,7 +345,7 @@ def example_experiments(repetitions):
         },
 
         {
-            'num_boids': 50,
+            'num_boids': 100,
             'num_preds': 1,
             'matching_factor': 0.40,
             'avoid_factor': 0.07,
@@ -337,7 +354,7 @@ def example_experiments(repetitions):
         },
 
         {
-            'num_boids': 50,
+            'num_boids': 100,
             'num_preds': 1,
             'matching_factor': 0.50,
             'avoid_factor': 0.07,
@@ -346,7 +363,7 @@ def example_experiments(repetitions):
         },
         
         {
-            'num_boids': 50,
+            'num_boids': 100,
             'num_preds': 1,
             'matching_factor': 0.60,
             'avoid_factor': 0.07,
@@ -355,10 +372,10 @@ def example_experiments(repetitions):
         },
     ]
 
-    param_sets_seperation = [
+    param_sets_separation = [
         # Very low alignment (nearly independent movement)
         {
-            'num_boids': 50,
+            'num_boids': 100,
             'num_preds': 1,
             'matching_factor': 0.05,
             'avoid_factor': 0.01,
@@ -367,7 +384,7 @@ def example_experiments(repetitions):
         },
         # Low alignment
         {
-            'num_boids': 50,
+            'num_boids': 100,
             'num_preds': 1,
             'matching_factor': 0.05,
             'avoid_factor': 0.03,
@@ -376,7 +393,7 @@ def example_experiments(repetitions):
         },
         # Default alignment (from boids_hunteradams.py)
         {
-            'num_boids': 50,
+            'num_boids': 100,
             'num_preds': 1,
             'matching_factor': 0.05,
             'avoid_factor': 0.07,
@@ -385,7 +402,7 @@ def example_experiments(repetitions):
         },
         # Higher alignment
         {
-            'num_boids': 50,
+            'num_boids': 100,
             'num_preds': 1,
             'matching_factor': 0.05,
             'avoid_factor': 0.10,
@@ -394,10 +411,46 @@ def example_experiments(repetitions):
         },
         # Very high alignment (strong schooling)
         {
-            'num_boids': 50,
+            'num_boids': 100,
             'num_preds': 1,
             'matching_factor': 0.05,
             'avoid_factor': 0.20,
+            'centering_factor': 0.0005,
+            'seed': 42
+        },
+        
+        {
+            'num_boids': 100,
+            'num_preds': 1,
+            'matching_factor': 0.05,
+            'avoid_factor': 0.30,
+            'centering_factor': 0.0005,
+            'seed': 42
+        },
+        
+        {
+            'num_boids': 100,
+            'num_preds': 1,
+            'matching_factor': 0.05,
+            'avoid_factor': 0.40,
+            'centering_factor': 0.0005,
+            'seed': 42
+        },
+        
+        {
+            'num_boids': 100,
+            'num_preds': 1,
+            'matching_factor': 0.05,
+            'avoid_factor': 0.50,
+            'centering_factor': 0.0005,
+            'seed': 42
+        },
+        
+        {
+            'num_boids': 100,
+            'num_preds': 1,
+            'matching_factor': 0.05,
+            'avoid_factor': 0.60,
             'centering_factor': 0.0005,
             'seed': 42
         }
@@ -406,7 +459,7 @@ def example_experiments(repetitions):
     param_sets_cohesion = [
         # Very low alignment (nearly independent movement)
         {
-            'num_boids': 50,
+            'num_boids': 100,
             'num_preds': 1,
             'matching_factor': 0.05,
             'avoid_factor': 0.07,
@@ -415,7 +468,7 @@ def example_experiments(repetitions):
         },
         # Low alignment
         {
-            'num_boids': 50,
+            'num_boids': 100,
             'num_preds': 1,
             'matching_factor': 0.05,
             'avoid_factor': 0.07,
@@ -424,7 +477,7 @@ def example_experiments(repetitions):
         },
         # Default alignment (from boids_hunteradams.py)
         {
-            'num_boids': 50,
+            'num_boids': 100,
             'num_preds': 1,
             'matching_factor': 0.05,
             'avoid_factor': 0.07,
@@ -433,7 +486,7 @@ def example_experiments(repetitions):
         },
         # Higher alignment
         {
-            'num_boids': 50,
+            'num_boids': 100,
             'num_preds': 1,
             'matching_factor': 0.05,
             'avoid_factor': 0.07,
@@ -442,28 +495,64 @@ def example_experiments(repetitions):
         },
         # Very high alignment (strong schooling)
         {
-            'num_boids': 50,
+            'num_boids': 100,
             'num_preds': 1,
             'matching_factor': 0.05,
             'avoid_factor': 0.07,
             'centering_factor': 0.0020,
             'seed': 42
+        },
+        
+        {
+            'num_boids': 100,
+            'num_preds': 1,
+            'matching_factor': 0.05,
+            'avoid_factor': 0.07,
+            'centering_factor': 0.0030,
+            'seed': 42
+        },
+        
+        {
+            'num_boids': 100,
+            'num_preds': 1,
+            'matching_factor': 0.05,
+            'avoid_factor': 0.07,
+            'centering_factor': 0.0040,
+            'seed': 42
+        },
+        
+        {
+            'num_boids': 100,
+            'num_preds': 1,
+            'matching_factor': 0.05,
+            'avoid_factor': 0.07,
+            'centering_factor': 0.0050,
+            'seed': 42
+        },
+        
+        {
+            'num_boids': 100,
+            'num_preds': 1,
+            'matching_factor': 0.05,
+            'avoid_factor': 0.07,
+            'centering_factor': 0.0060,
+            'seed': 42
         }
     ]
     
     # Run experiments
-    if changing == 'matching':
+    if experiment.parameter_name == 'matching':
         results = experiment.run_multiple_experiments(param_sets_alignment)
-    if changing == 'avoid':
-        results = experiment.run_multiple_experiments(param_sets_seperation)
-    if changing == 'centering':
+    elif experiment.parameter_name == 'avoid':
+        results = experiment.run_multiple_experiments(param_sets_separation)
+    elif experiment.parameter_name == 'centering':
         results = experiment.run_multiple_experiments(param_sets_cohesion)
     
     # Save results
-    experiment.save_results_to_csv(f'{changing}_eating_experiment_results.csv')
+    experiment.save_results_to_csv(f'{experiment.parameter_name}_eating_experiment_results.csv')
     
     # Plot results
-    experiment.plot_results(save_path=f'{changing}_eating_experiment_plot.png')
+    experiment.plot_results(save_path=f'{experiment.parameter_name}_eating_experiment_plot.png')
     
     return experiment
 
@@ -475,8 +564,9 @@ if __name__ == '__main__':
     print()
     
     # Run example experiments
-    changing = 'matching' # matching / avoid / centering
+    # Choose which parameter to vary: 'matching' (alignment) / 'avoid' (separation) / 'centering' (cohesion)
+    parameter_to_vary = 'matching'
     repetitions = 20
-    experiment = example_experiments(repetitions)
+    experiment = example_experiments(parameter_name=parameter_to_vary, repetitions=repetitions)
     
     print("\nExperiment complete!")
