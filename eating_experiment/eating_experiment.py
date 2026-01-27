@@ -449,7 +449,12 @@ def example_experiments(repetitions):
     ]
     
     # Run experiments
-    results = experiment.run_multiple_experiments(param_sets_alignment)
+    if changing == 'matching':
+        results = experiment.run_multiple_experiments(param_sets_alignment)
+    if changing == 'avoid':
+        results = experiment.run_multiple_experiments(param_sets_seperation)
+    if changing == 'centering':
+        results = experiment.run_multiple_experiments(param_sets_cohesion)
     
     # Save results
     experiment.save_results_to_csv(f'{changing}_eating_experiment_results.csv')
