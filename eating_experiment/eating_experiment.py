@@ -199,7 +199,7 @@ class EatingExperiment:
             params = result['params']
             fish_remaining.append(result['average_fish_remaining'])
 
-        ax2.boxplot(fish_remaining, labels=changing_values)
+        ax2.boxplot(fish_remaining, tick_labels=changing_values)
         # ax2.plot(time_seconds, result['fish_remaining'], marker='o', markersize=3, label=label)
     
         ax2.set_xlabel(f'Change in {changing}_factor', fontsize=12)
@@ -475,8 +475,8 @@ if __name__ == '__main__':
     print()
     
     # Run example experiments
-    changing = 'centering'
-    repetitions = 2
+    changing = 'matching' # matching / avoid / centering
+    repetitions = 20
     experiment = example_experiments(repetitions)
     
     print("\nExperiment complete!")
