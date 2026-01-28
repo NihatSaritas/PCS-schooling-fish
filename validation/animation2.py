@@ -79,6 +79,23 @@ def frame_behavior_quantification(framedata, polarization=True, milling_index=Tr
     return polarization, milling_index
 
 
+def create_hist(p, m):
+    bins=50
+
+    for end in [-1, 2500]:
+        fig = plt.figure()
+        plt.hist(p[0:end], bins, alpha=0.5, label='polarization', color='b', density=True)
+        plt.hist(m[0:end], bins, alpha=0.5, label='milling index', color='r', density=True)
+        plt.legend(loc='upper right')
+        if end == -1:
+            plt.savefig(PATH + 'dataset_hist_full.png')
+        else:
+            plt.savefig(PATH + 'dataset_hist.png')
+        plt.show()
+
+
+
+
 def animate(fish_dict):
     """
     Main animation loop. Saves small files as gif, big files as mp4.
@@ -175,6 +192,7 @@ def animate(fish_dict):
     # ani.save('fish_animation_2.gif', writer='pillow', fps=60)
     ani.save(PATH + 'fish_animation_2_with_quant.mp4', writer='ffmpeg', fps=60)
     plt.show()
+    create_hist(p, m)
 
 
 def read_dataset(file):
