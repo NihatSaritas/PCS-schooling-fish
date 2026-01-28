@@ -72,6 +72,7 @@ class EatingExperiment:
         sim.minspeed_pred = minspeed_pred
         sim.turn_factor_pred = turn_factor_pred
         #sim.eating_duration = eating_duration
+        sim.eating_duration = self.eating_duration
         
         # Track eating over time
         initial_boids = num_boids
@@ -159,7 +160,10 @@ class EatingExperiment:
             print(f"  Result: {final_eaten}/{result['initial_boids']} fish eaten by frame {final_frame}")
             print()
         
-        self.results = results
+        if self.eating_duration == 60:
+            self.results60 = results
+        else:
+            self.results30 = results
         return results
     
     def plot_results(self, save_path: str = None):
@@ -169,53 +173,47 @@ class EatingExperiment:
         Args:
             save_path: Optional path to save the plot
         """
-        if not self.results:
+        if not self.results60 or not self.results30:
             print("No results to plot. Run experiments first.")
             return
         
-        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 10))
+        fig, ax = plt.subplots(1, 1, figsize=(12, 5))
         
-        # Plot 1: Fish eaten over time
-        fish_eaten = []
-        changing_values = []
-        for i, result in enumerate(self.results):
+        # Plot the fish remaining over time
+        for type in [30, 60]:
+            if type==60:
+                results = self.results60
+                facecolor='mediumblue'
+                mediancolor="turquoise"
+            else:
+                print('if 30')
+                results = self.results30
+                facecolor='red'
+                mediancolor="darkred"
 
-            # time_seconds = np.array(result['time_points']) / 60.0  # Convert frames to seconds
-            params = result['params']
-            changing_values.append([params[f'maxspeed_pred'], params[f'minspeed_pred'], params[f'turn_factor_pred']])
-            fish_eaten.append(result['average_fish_eaten'])
-        
-        ax1.boxplot(fish_eaten, tick_labels=self.x)
+            fish_remaining = []
+            for result in results:
+                fish_remaining.append(result['average_fish_remaining'])
 
-        # ax1.plot(time_seconds, result['fish_eaten'], marker='o', markersize=3, label=label)
-        ax1.set_xlabel(f'Predator to fish mobility ratio (x fish baseline)', fontsize=12)
-        ax1.set_ylabel('Number of Fish Eaten', fontsize=12)
-        ax1.set_title('Fish Eaten Over Time', fontsize=14, fontweight='bold')
-        # ax1.legend(fontsize=9, loc='best')
-        ax1.grid(True, alpha=0.3)
-        
-        # Plot 2: Fish remaining over time
-        fish_remaining = []
-        for i, result in enumerate(self.results):
-            # time_seconds = np.array(result['time_points']) / 60.0
-            params = result['params']
-            fish_remaining.append(result['average_fish_remaining'])
+            bp = ax.boxplot(fish_remaining, tick_labels=self.x, patch_artist=True, 
+                            medianprops=dict(color=mediancolor, linewidth=1.5), label=f'{type} frame eating duration')
 
-        ax2.boxplot(fish_remaining, tick_labels=self.x)
-        # ax2.plot(time_seconds, result['fish_remaining'], marker='o', markersize=3, label=label)
-    
-        ax2.set_xlabel(f'Predator to fish mobility ratio (x fish baseline)', fontsize=12)
-        ax2.set_ylabel('Number of Fish Remaining', fontsize=12)
-        ax2.set_title('Fish Remaining Over Time', fontsize=14, fontweight='bold')
-        # ax2.legend(fontsize=9, loc='best')
-        ax2.grid(True, alpha=0.3)
-        
-        plt.tight_layout()
+            for patch in bp['boxes']:
+                patch.set_facecolor(facecolor)
+                patch.set_alpha(0.6)
+
+        ax.set_xlabel(f'Predator to fish mobility ratio (x fish baseline)', fontsize=12)
+        ax.set_ylabel('Number of Fish Remaining', fontsize=12)
+        ax.set_title('Fish Remaining for various predator configurations', fontsize=14, fontweight='bold')
+        ax.legend(fontsize=9, loc='best')
+        ax.grid(True, alpha=0.3)
+        plt.setp(ax.get_xticklabels(), rotation=60, ha='center', rotation_mode='anchor')
         
         if save_path:
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
             print(f"Plot saved to {save_path}")
         
+        print('start plot')
         plt.show()
     
     def save_results_to_csv(self, filepath: str):
@@ -273,74 +271,17 @@ def example_experiments(repetitions):
     experiment = EatingExperiment(duration_frames=2000, repetitions=repetitions)
     
     # Define parameter sets to test
-    param_sets = [
-        # 50% lower than fish speed
-        {
-            'num_boids': 50,
-            'num_preds': 1,
-            'maxspeed_pred': 1.5,
-            'minspeed_pred': 1.0,
-            'turn_factor_pred': 0.1,
-            'seed': 42
-        },
-        # 10% lower than fish speed
-        {
-            'num_boids': 50,
-            'num_preds': 1,
-            'maxspeed_pred': 2.7,
-            'minspeed_pred': 1.8,
-            'turn_factor_pred': 0.2,
-            'seed': 42
-        },
-        # Same speed as fish
-        {
-            'num_boids': 50,
-            'num_preds': 1,
-            'maxspeed_pred': 3.0,
-            'minspeed_pred': 2.0,
-            'turn_factor_pred': 0.2,
-            'seed': 42
-        },
-        # Default parameters (10% higher than fish speed) (from boids_hunteradams.py)
-        {
-            'num_boids': 50,
-            'num_preds': 1,
-            'maxspeed_pred': 3.3,
-            'minspeed_pred': 2.2,
-            'turn_factor_pred': 0.2,
-            'seed': 42
-        },
-        # 50% higher than fish speed TODO: find good turn factor
-        {
-            'num_boids': 50,
-            'num_preds': 1,
-            'maxspeed_pred': 4.5,
-            'minspeed_pred': 3.0,
-            'turn_factor_pred': 0.3,
-            'seed': 42
-        },
-        # 100% higher than fish speed
-        {
-            'num_boids': 50,
-            'num_preds': 1,
-            'maxspeed_pred': 6,
-            'minspeed_pred': 4,
-            'turn_factor_pred': 0.4,
-            'seed': 42
-        }
-    ]
-    
-    experiment_count = 40
+    experiment_count = 45  # set to 23 for 0.2 jumps
     minspeed_baseline, maxspeed_baseline, turn_factor_baseline = 6, 3, 0.2
     minfactor = 0.1  # start at 0.1*fishspeed
-    maxfactor = 4    # end at 4*fishspeed
+    maxfactor = 4.5    # end at 4.5*fishspeed
 
     minspeeds = np.linspace(minfactor*minspeed_baseline, maxfactor*maxspeed_baseline, experiment_count)
     maxspeeds = np.linspace(minfactor*maxspeed_baseline, maxfactor*maxspeed_baseline, experiment_count)
     turn_factors = np.linspace(minfactor*turn_factor_baseline, maxfactor*turn_factor_baseline, experiment_count)
     # eating_baseline = 60
     #eating_times = np.linspace((1/minfactor)*eating_baseline, (1/maxfactor)*eating_baseline, experiment_count)
-    experiment.x = np.round(np.linspace(minfactor, maxfactor, experiment_count), 2)
+    experiment.x = np.round(np.linspace(minfactor, maxfactor, experiment_count), 1)
 
     param_sets = [
         {            
@@ -356,13 +297,17 @@ def example_experiments(repetitions):
     ]
 
     # Run experiments
-    results = experiment.run_multiple_experiments(param_sets)
+    experiment.eating_duration = 60
+    results60 = experiment.run_multiple_experiments(param_sets)
+    
+    experiment.eating_duration = 30
+    results30 = experiment.run_multiple_experiments(param_sets)
     
     # Save results
-    experiment.save_results_to_csv('speed_experiment_results.csv')
+    # experiment.save_results_to_csv('speed_experiment_results.csv')
     
     # Plot results
-    experiment.plot_results(save_path='speed_experiment_plot.png')
+    experiment.plot_results(save_path='speed_experiment_double.png')
     
     return experiment
 
@@ -374,7 +319,7 @@ if __name__ == '__main__':
     print()
     
     # Run example experiments
-    repetitions = 10
+    repetitions = 20
     experiment = example_experiments(repetitions)
     
     print("\nExperiment complete!")
