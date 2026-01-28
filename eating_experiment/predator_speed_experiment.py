@@ -38,6 +38,7 @@ class EatingExperiment:
         maxspeed_pred: float = 3.3,
         minspeed_pred: float = 2.2,
         turn_factor_pred: float = 0.2,
+        #eating_duration: int = 60,
         seed: int = None,
         width: int = 640,
         height: int = 480
@@ -70,6 +71,7 @@ class EatingExperiment:
         sim.maxspeed_pred = maxspeed_pred
         sim.minspeed_pred = minspeed_pred
         sim.turn_factor_pred = turn_factor_pred
+        #sim.eating_duration = eating_duration
         
         # Track eating over time
         initial_boids = num_boids
@@ -137,7 +139,7 @@ class EatingExperiment:
             repetition = []
             for j in range(self.repetitions):
                 result = self.run_experiment(**params)
-                params['seed'] += 1
+                params['seed'] += '/' + str(54321*j)
             
                 avg_fish_eaten.append(result['fish_eaten'][-1])
                 avg_fish_remaining.append(result['fish_remaining'][-1])
@@ -183,10 +185,10 @@ class EatingExperiment:
             changing_values.append([params[f'maxspeed_pred'], params[f'minspeed_pred'], params[f'turn_factor_pred']])
             fish_eaten.append(result['average_fish_eaten'])
         
-        ax1.boxplot(fish_eaten, tick_labels=changing_values)
+        ax1.boxplot(fish_eaten, tick_labels=self.x)
 
         # ax1.plot(time_seconds, result['fish_eaten'], marker='o', markersize=3, label=label)
-        ax1.set_xlabel(f'Change in max- and minspeed and turnfactor', fontsize=12)
+        ax1.set_xlabel(f'Predator to fish mobility ratio (x fish baseline)', fontsize=12)
         ax1.set_ylabel('Number of Fish Eaten', fontsize=12)
         ax1.set_title('Fish Eaten Over Time', fontsize=14, fontweight='bold')
         # ax1.legend(fontsize=9, loc='best')
@@ -199,10 +201,10 @@ class EatingExperiment:
             params = result['params']
             fish_remaining.append(result['average_fish_remaining'])
 
-        ax2.boxplot(fish_remaining, tick_labels=changing_values)
+        ax2.boxplot(fish_remaining, tick_labels=self.x)
         # ax2.plot(time_seconds, result['fish_remaining'], marker='o', markersize=3, label=label)
     
-        ax1.set_xlabel(f'Change in max- and minspeed and turnfactor', fontsize=12)
+        ax2.set_xlabel(f'Predator to fish mobility ratio (x fish baseline)', fontsize=12)
         ax2.set_ylabel('Number of Fish Remaining', fontsize=12)
         ax2.set_title('Fish Remaining Over Time', fontsize=14, fontweight='bold')
         # ax2.legend(fontsize=9, loc='best')
@@ -268,7 +270,7 @@ def example_experiments(repetitions):
     All other parameters use defaults from boids_hunteradams.py.
     """
     # Initialize experiment
-    experiment = EatingExperiment(duration_frames=6000, repetitions=repetitions)
+    experiment = EatingExperiment(duration_frames=2000, repetitions=repetitions)
     
     # Define parameter sets to test
     param_sets = [
@@ -328,6 +330,31 @@ def example_experiments(repetitions):
         }
     ]
     
+    experiment_count = 40
+    minspeed_baseline, maxspeed_baseline, turn_factor_baseline = 6, 3, 0.2
+    minfactor = 0.1  # start at 0.1*fishspeed
+    maxfactor = 4    # end at 4*fishspeed
+
+    minspeeds = np.linspace(minfactor*minspeed_baseline, maxfactor*maxspeed_baseline, experiment_count)
+    maxspeeds = np.linspace(minfactor*maxspeed_baseline, maxfactor*maxspeed_baseline, experiment_count)
+    turn_factors = np.linspace(minfactor*turn_factor_baseline, maxfactor*turn_factor_baseline, experiment_count)
+    # eating_baseline = 60
+    #eating_times = np.linspace((1/minfactor)*eating_baseline, (1/maxfactor)*eating_baseline, experiment_count)
+    experiment.x = np.round(np.linspace(minfactor, maxfactor, experiment_count), 2)
+
+    param_sets = [
+        {            
+            'num_boids': 50,
+            'num_preds': 1,
+            'maxspeed_pred': maxspeeds[i],
+            'minspeed_pred': minspeeds[i],
+            'turn_factor_pred': turn_factors[i],
+            #'eating_duration': eating_times[i],
+            'seed': str(12345*i)+'/'+'5062PRCS6Y'
+        }
+        for i in range(experiment_count)
+    ]
+
     # Run experiments
     results = experiment.run_multiple_experiments(param_sets)
     
