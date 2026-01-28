@@ -75,7 +75,7 @@ def experiment(data_path, sim_config):
     sim = BoidsSimulation(**sim_config)
     # Put ideal parameters
     sim.visual_range = 70
-    sim.matching_factor = 0.05
+    sim.matching_factor = 0.052
     sim.protected_range = 25
 
     # Update squared thresholds
@@ -83,9 +83,9 @@ def experiment(data_path, sim_config):
     sim.protected_range_squared = sim.protected_range * sim.protected_range
     
     sim_pols, sim_nnds, sim_rel = [], [], []
-    for i in range(5000): 
+    for i in range(2500): 
         sim.update()
-        if i > 300: #not beginning
+        if i > 200: #not beginning
             px = np.array([b.x for b in sim.boids])
             py = np.array([b.y for b in sim.boids])
             vx = np.array([b.vx for b in sim.boids])
