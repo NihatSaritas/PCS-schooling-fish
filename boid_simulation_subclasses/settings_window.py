@@ -138,7 +138,6 @@ class SettingsWindow:
 
         self.visualizer.sim.fieldofview_degrees = self.handle_input(self.entry_fieldofview, minval=0, maxval=360,
                                                                 type_func=float, fallback=self.visualizer.sim.fieldofview_degrees)
-        self.visualizer.sim.edit_fov()  # Needed to recompute internal cosine from the input in degrees
 
         self.visualizer.sim.front_weight = self.handle_input(self.entry_front_weight, minval=10**-6, maxval=1,
                                                                 type_func=float, fallback=self.visualizer.sim.front_weight)
@@ -151,6 +150,9 @@ class SettingsWindow:
 
         self.visualizer.sim.max_turn = self.handle_input(self.entry_max_turn, minval=10**-6, maxval=1,
                                                                 type_func=float, fallback=self.visualizer.sim.max_turn)
+        
+        self.visualizer.sim.update_internal_vars()  # Update precomputed vars corresponding to FOV, visual range, and protected range.
+
 
     def create_pred_frame(self):
         pred_frame = tk.Frame(self.rightcol)

@@ -95,7 +95,6 @@ def create_hist(p, m):
 
 
 
-
 def animate(fish_dict):
     """
     Main animation loop. Saves small files as gif, big files as mp4.

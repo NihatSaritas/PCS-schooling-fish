@@ -124,10 +124,13 @@ class BoidsSimulation:
         if len(self.predators) > self.num_preds:      
             self.predators = self.predators[0:self.num_preds]
 
-    def edit_fov(self):
-        """Subwindow updates FOV in degrees. This function is called to update the parameter."""
+    def update_internal_vars(self):
+        """ The UI may edit variables such as visual range, protected range, and field of view.
+        These parameters have corresponding precomputed values usd by the simulation. This function
+        serves to update these precomputed internal variables."""
         self.fieldofview = math.cos(math.radians(self.fieldofview_degrees/2))
-        print(f'fov:{self.fieldofview_degrees}° -> {self.fieldofview}')
+        self.visual_range_squared = self.visual_range ** 2
+        self.protected_range_squared = self.protected_range ** 2
 
     def update(self):
         """Update all boids and predators for one timestep"""
