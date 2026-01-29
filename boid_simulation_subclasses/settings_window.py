@@ -1,15 +1,30 @@
-"""TODO: Header comment"""
-# TODO: refactor apply codeblocks, too mcuh repeating
-
+"""This file contains the class for settings window of the visualizer, see its documentation
+in the class comment below. It is intened to be used by the visualizer, do not run this
+file directly."""
 import tkinter as tk
 from tkinter import ttk
 
 
-# Ensures all left columns are consistent width, as a result the
-# right columns are then all aligned.
+# Ensures the columns are the same length, which enforces alignment.
 MIN_WIDTH = 35
 
 class SettingsWindow:
+    """Class for settings window used by the visualizer. Assigns each tunable parameter to one of the
+    following sections: boids, predators, agents (shared between boid and predator), tank, and stats.
+    For each section it then creates a frame and corresponding apply button. These frames contain entry
+    widgets where users can see and update internal tunable parameters.
+    
+    On apply, first validates the user input. If it is of the wrong type it gets replaced by the latest
+    valid input or the default value for that parameter. If input if too large or too small, it clips this
+    to the allowed range of that parameter. If the input was valid, it is used directly.
+
+    Some parameters have corresponding datastructures or precomputed values for efficiency. In these cases, 
+    helper functions from the visualizer or simulator are called to recompute or update these accordingly.
+
+    Args:
+        visualizer: serves as reference to parent so it is possible to call the helper functions above, or
+                    to update internal variables to the user input if valid.
+    """
     def __init__(self, visualizer):
         # Reference to parent, needed to update changed parameters.
         self.visualizer = visualizer
@@ -22,8 +37,6 @@ class SettingsWindow:
         self.rightcol = tk.Frame(self.ui_win)
         self.rightcol.grid(row=0, column=1, sticky='EWN', padx=(5,0), pady=0)
 
-        # self.ui_win.geometry("400x800")
-
         # Setup the configuration frames.
         self.create_boid_frame()
         self.create_pred_frame()
@@ -31,9 +44,9 @@ class SettingsWindow:
         self.create_tank_frame()
         self.create_stat_frame()
 
-        # Ensures toggle button is triggered when window is closed with x.
+        # Handle closing window with x in the same way as a toggle-off click would have, i.e. it
+        # turns the settings window button red.
         self.ui_win.protocol("WM_DELETE_WINDOW", self.visualizer.toggle_settings)
-        # TODO error console?
 
     def create_frame_header(self, frame, title, btntext, btnfunc):
         """Creates label with frame title and a button to apply changes from corresponding
@@ -45,8 +58,8 @@ class SettingsWindow:
         apply_button.grid(row=0, column=1, sticky='E')
 
     def create_input_row(self, frame, row, text, value):
-        """Creates label with name of changed parameter and an tkinter entry widget for
-        user input."""
+        """Creates label with name of the corresponding parameter and an tkinter entry widget
+        for user input."""
         label = tk.Label(frame, text=text, width=MIN_WIDTH, anchor='w')
         label.grid(row=row, column=0, sticky='W')
         entry = tk.Entry(frame)
@@ -109,9 +122,9 @@ class SettingsWindow:
         self.add_splitter(boid_frame, row=14)
 
     def apply_boid_changes(self):
-        """Applies changes entered in the boid configuration frame. If input is invalid, it replaces it with the internal
-        variable value, which is either the default or last put valid input. If input is too large or too small, it clips
-        the value. See the README on min and max values for each parameter."""
+        """Applies changes entered in the boid configuration frame. Calls the simulator class to update
+        its internal variables that are precomputed based on some of these parameters, e.g. recomputes
+        internal visual_range_squared parameter from new visual_range input."""
         self.visualizer.sim.turn_factor = self.handle_input(self.entry_turn_factor, minval=10**-6, maxval=1,
                                                             type_func=float, fallback=self.visualizer.sim.turn_factor)
 
@@ -155,6 +168,7 @@ class SettingsWindow:
 
 
     def create_pred_frame(self):
+        """Create confiuration frame for predators."""
         pred_frame = tk.Frame(self.rightcol)
         pred_frame.grid(row=0, column=0, sticky='EWN', padx=0, pady=0)
 
@@ -194,7 +208,7 @@ class SettingsWindow:
         self.add_splitter(pred_frame, row=14)
 
     def apply_pred_changes(self):
-        """Applies changes entered in the tank configuration fields.""" 
+        """Applies changes entered in the predator configuration fields.""" 
         self.visualizer.sim.turn_factor_pred = self.handle_input(self.entry_turn_factor_pred, minval=10**-6, maxval=1,
                                                             type_func=float, fallback=self.visualizer.sim.turn_factor_pred)
         
@@ -249,7 +263,8 @@ class SettingsWindow:
 
 
     def apply_tank_changes(self):
-        """Applies changes entered in the tank configuration fields."""
+        """Applies changes entered in the tank configuration fields. Calls visualizer class to handle
+        resizing the canvas and updates precomputed margin variables."""
         self.visualizer.sim.width = self.handle_input(self.entry_width, minval=60, maxval=4000,
                                                        type_func=int, fallback=self.visualizer.sim.width)
 
@@ -334,22 +349,21 @@ class SettingsWindow:
         self.entry_num_boids.insert(0, self.visualizer.sim.num_boids)
 
     def apply_stat_changes(self):
+        """Helper function changing the x-range of the stats window to specified user input. Calls the
+        stats window class to ensure proper handling of its internal arrays."""
         self.visualizer.stat_xrange = self.handle_input(self.entry_xrange, minval=10, maxval=10**5,
                                                           type_func=int, fallback=self.visualizer.stat_xrange)
 
         if self.visualizer and self.visualizer.stats_open:
             self.visualizer.stats.resize()
 
-    def is_float(self, input):
-        """Return true if input is float, else false."""
-        try:
-            input = float(input)
-        except ValueError:
-            return False
-        return True
-
     def check_type(self, input, type_func):
-        """Return true if input is float, else false."""
+        """Return true if input string can be converted to type of type_func, else return false.
+        
+        Args:
+            input: string of user input read from a widget.
+            type_func: type conversion function used to test if input can be converted.
+        """
         try:
             input = type_func(input)
         except ValueError:
@@ -360,16 +374,20 @@ class SettingsWindow:
         """Clip input between max and min values."""
         return max(minval, min(input, maxval))
 
-    def read(self, input, minval, maxval, fallback):
-        """Return clipped input as float if vallid, else return fallback (old parameter value)."""
-        if not self.is_float(input):
-            print(f"Rejected input: '{input}', using last valid value: '{fallback}'")
-            return fallback
-        input = float(input)
-        return self.clip(input, minval, maxval)
-
     def handle_input(self, entry, minval, maxval, type_func, fallback):
-        """TODO"""
+        """Reads entry widget and returns the new value if this is valid. Else return
+        the last valid input (fallback) after replacing the entry widget with this value
+        again. Additionally, if the user input is of valid type, but too large or too small,
+        clip it between minval and maxval.
+        
+        Args:
+            entry: tkinter entry widget containing the user input.
+            minval: the minimum allowed value for the input.
+            maxval: the maximum allowed value for this input.
+            type_func: function used to check type of input (i.e. float or int funcs)
+            fallback: if the user input is invalid, use this old value.
+        """
+        # Read input, clip if outside of allowed range, use fallback if invalid
         input = entry.get()
         if not self.check_type(input, type_func):
             print(f"Rejected input: '{input}', using last valid value: '{fallback}'")
@@ -378,6 +396,8 @@ class SettingsWindow:
             input = type_func(input)
             new_val = self.clip(input, minval, maxval)
 
+        # Empty the entry widget, then insert the value from above. This allows users to see
+        # their input was either rejected or clipped between a min and max.
         entry.delete(0, tk.END)
         if type_func == int:
             entry.insert(0, f"{new_val}")

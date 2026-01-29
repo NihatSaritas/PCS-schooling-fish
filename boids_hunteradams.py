@@ -17,7 +17,6 @@ class Boid:
 
 class Predator:
     """Represents a single predator in the simulation."""
-
     def __init__(self, x, y, vx, vy):
         self.x = x
         self.y = y
@@ -27,6 +26,7 @@ class Predator:
         self.eating_timer = 0
 
 class BoidsSimulation:
+    """Class containing the core components needed to run the boid simulation."""
     def __init__(self, num_boids=50, num_preds=1, width=640, height=480, seed=None):
         # Tunable parameters
         self.num_boids = num_boids
@@ -45,7 +45,7 @@ class BoidsSimulation:
         # Predator parameters
         self.num_preds = num_preds
         self.turn_factor_pred = 0.2
-        self.visual_range_pred = 160  # TODO: picked 'random' high number, subject to change
+        self.visual_range_pred = 160
         self.predatory_range = 100
         self.eating_range = 20
         self.eating_duration = 60  # frames (~1 second at 60 FPS)
@@ -55,7 +55,7 @@ class BoidsSimulation:
         self.maxspeed_pred = 3.3
         self.minspeed_pred = 2.2
 
-        """Inspired additions by Katz-et-all"""
+        # Additions inspired by Katz-et-all
         self.fieldofview_degrees = 340 # small blind zone behind
         self.fieldofview = math.cos(math.radians(self.fieldofview_degrees/2))
         self.front_weight = 0.3
@@ -63,7 +63,7 @@ class BoidsSimulation:
         self.turning_control = 0.05
         self.max_turn = 0.15
 
-        # Shared parameter
+        # Shared parameters between fish and predator
         self.random_factor = 0.25
         self.random_freq = 0.15
 
@@ -71,7 +71,7 @@ class BoidsSimulation:
         self.width = width
         self.height = height
 
-        # Margins for turning
+        # Margins for turning (i.e. distance at which agents see the wall)
         self.margin = int(max(0.2 * width, 0.2 * height))
         self.leftmargin = self.margin
         self.rightmargin = width - self.margin
@@ -101,8 +101,10 @@ class BoidsSimulation:
             self.predators.append(Predator(x, y, vx, vy))
 
     def edit_boid_count(self):
-        """Removes or adds boids until number of boids match the (edited) parameter. Additions
-        are random. Removal is deterministic and depends on the index in self.boids."""
+        """Removes or adds boids until number of boids match the parameter. Editing
+        the value of num_boids is handled by the user-interface. Removal is deterministic 
+        and depends on the ordering in self.boids. Additions are psueodo-random, i.e. only 
+        deterministic if a seed has been set."""
         while(len(self.boids) < self.num_boids):
             x = random.uniform(0, self.width)
             y = random.uniform(0, self.height)
@@ -114,6 +116,10 @@ class BoidsSimulation:
             self.boids = self.boids[0:self.num_boids]
 
     def edit_pred_count(self):
+        """Removes or adds predators until number of boids match the parameter. Editing
+        the value of num_preds is handled by the user-interface. Removal is deterministic 
+        and depends on the ordering in self.predators. Additions are psueodo-random, i.e.
+        only deterministic if a seed has been set."""        
         while(len(self.predators) < self.num_preds):
             x = random.uniform(0, self.width)
             y = random.uniform(0, self.height)
@@ -125,9 +131,9 @@ class BoidsSimulation:
             self.predators = self.predators[0:self.num_preds]
 
     def update_internal_vars(self):
-        """ The UI may edit variables such as visual range, protected range, and field of view.
-        These parameters have corresponding precomputed values usd by the simulation. This function
-        serves to update these precomputed internal variables."""
+        """ The user-interface may edit variables such as visual range, protected range, and field of 
+        view. These parameters have corresponding precomputed values used by the simulation. This 
+        function serves to update these precomputed internal variables."""
         self.fieldofview = math.cos(math.radians(self.fieldofview_degrees/2))
         self.visual_range_squared = self.visual_range ** 2
         self.protected_range_squared = self.protected_range ** 2
@@ -362,7 +368,7 @@ class BoidsSimulation:
             if predator.is_eating:
                 continue
 
-            # Add random noise (roaming behavior) if predator is not actively chasing.
+            # Add random noise (roaming behavior) if predator is not actively chasing
             if not fish_in_range:
                 noise = random.uniform(-self.random_factor, self.random_factor)
                 vx, vy = predator.vx, predator.vy
@@ -446,7 +452,7 @@ class BoidsSimulation:
         count = len(self.boids)
 
         if count == 0:
-            return 1, 0
+            return None
 
         px = np.zeros(count, dtype=np.float64)
         py = np.zeros(count, dtype=np.float64)
@@ -462,14 +468,20 @@ class BoidsSimulation:
         return px, py, vx, vy
     
     def get_stats(self):
-        px, py, vx, vy = self.get_state_arrays()
-        # Compute the polarization. See README for details.
+        """Compute and return the polarization and millin-index for the current boid positions.
+        Used by the stats window to get behavioral metrics. For definitions, refer to the report."""
+        res = self.get_state_arrays()
+        if not res:
+            return 1,0
+        px, py, vx, vy = res
+
+        # Compute the polarization.
         d = np.column_stack([vx, vy])
         lengths = np.linalg.norm(d, axis=1, keepdims=True)
         dnorm = d / lengths
         polarization = np.linalg.norm(np.mean(dnorm, axis=0))
 
-        # Compute the milling index. See README for details.
+        # Compute the milling index.
         p = np.column_stack([px, py])
         barycenter = np.mean(p, axis=0)
         xbar = px - barycenter[0]
@@ -487,7 +499,15 @@ class BoidsSimulation:
 
 
 class BoidsVisualizer:
+    """Visualization tool for the boid simulation. If the settings and/or stats window are toggled on, 
+    the 2 files in '/boid_simulation_subclasses' are called to handle these."""
     def __init__(self, num_boids=100, num_preds=1, width=640, height=480, seed=None, pause_after=-1):
+        # Tunable parameters
+        self.triangle_size = 3 
+        self.pred_triangle_size = 5
+        self.stat_xrange = 2000
+
+        # Initialize te simulation
         self.sim = BoidsSimulation(num_boids, num_preds, width, height, seed)
         self.pause_after = pause_after
 
@@ -495,17 +515,17 @@ class BoidsVisualizer:
         self.root = tk.Tk()
         self.root.title("Boids Simulation")
 
-        # Roughly 60 fps, but highly dependent on device and param configuration.
+        # Roughly 60 fps, but highly dependent on device and param configuration
         self.delay = 16
 
-        # Initialize frame counter and tunable x range for stats window.
+        # Initialize frame counter
         self.frame = 1
 
         # Create canvas
         self.canvas = tk.Canvas(self.root, width=width, height=height, bg='white')
         self.canvas.pack()
 
-        # Create 2 information fields for number of boids and the current frame.
+        # Create 2 information fields for number of boids and the current frame
         self.label_num_boids = tk.Label(
                 self.root,
                 text=f"Number of boids: {self.sim.num_boids}",
@@ -518,7 +538,7 @@ class BoidsVisualizer:
             fg="darkblue")
         self.label_num_frame.pack(side=tk.TOP, anchor='w')
 
-        # Toggle buttons for ui/settings and stat visualization.
+        # Toggle buttons for ui/settings and stat visualization
         self.stats_open = False
         self.ui_open = False
 
@@ -539,29 +559,39 @@ class BoidsVisualizer:
             triangle_pred = self.canvas.create_polygon(0, 0, 0, 0, 0, 0, fill='red', outline='darkred')
             self.triangles_pred.append(triangle_pred)
 
-        # Tunable parameters
-        self.triangle_size = 3
-        self.pred_triangle_size = 5
-        self.stat_xrange = 2000  # For stat window only
-
         # Start animation
         self.animate()
         self.root.mainloop()
 
     def edit_boid_count(self):
+        """Deletes current triangle objects on the canvas, calls the boids simulation class to update
+        its list of boids to match the value of its internal parameter, then recreates triange objects
+        for the changed list of boids. Editing the internal parameter is handled by the user-interface."""
+        # Delete triangle objects for boids
         for triangle in self.triangles:
             self.canvas.delete(triangle)
+
+        # Call simulation to update its list of boids
         self.sim.edit_boid_count()
         self.triangles = []
+
+        # Redraw the triangle objects
         for _ in self.sim.boids:
             triangle = self.canvas.create_polygon(0, 0, 0, 0, 0, 0, fill='blue', outline='darkblue')
             self.triangles.append(triangle)
 
     def edit_pred_count(self):
-        # Redraw canvas here, edit predators themselves in function below
+        """Deletes current triangle objects on the canvas for predators, calls the boids simulation class 
+        to update its list of predators to match the value of its internal parameter, then recreates triange 
+        objects for the changed list of predators. Editing the internal parameter is handled by the user-interface."""
+        # Delete triangle objects for predators
         for triangle in self.triangles_pred:
             self.canvas.delete(triangle)
+
+        # Call simulation to update its list of predators
         self.sim.edit_pred_count()
+
+        # Redraw the triangle objects
         self.triangles_pred = []
         for _ in self.sim.predators:
             triangle = self.canvas.create_polygon(0, 0, 0, 0, 0, 0, fill='red', outline='darkred')
@@ -588,18 +618,19 @@ class BoidsVisualizer:
         return [x1, y1, x2, y2, x3, y3]
 
     def animate(self):
-        """Update animation frame"""
-        if self.pause_after != -1:  # i.e. if not set to run indefinitely
+        """Update the animation by 1 frame."""
+        if self.pause_after != -1:  # -1 corresponds to run indefenitelty setting
             if self.pause_after == 0:
                 self.root.quit()
             else:
                 self.pause_after -= 1
 
+        # Run simulation for 1 timestep, then update the frame and boid counters
         self.sim.update()
         self.label_num_boids.config(text=f"Number of boids: {self.sim.num_boids}")
         self.label_num_frame.config(text=f"Frame number: {self.frame}")
 
-        # Remove eaten boids from simulation
+        # Remove eaten boids from the canvas
         if len(self.sim.boid_index) > 0:
             for idx in self.sim.boid_index:
                 self.canvas.delete(self.triangles[idx])
@@ -615,20 +646,23 @@ class BoidsVisualizer:
             points = self.get_triangle_points(predator, self.pred_triangle_size)
             self.canvas.coords(self.triangles_pred[j], *points)
 
+        # If toggled on, update the stats window by 1 timeframe
         if self.stats_open:
             self.stats.update()
 
-        # Schedule next frame (approximately 60 FPS)
+        # Schedu(le next frame (default delay approximates 60 FPS, but this varies based on device)
         self.frame += 1
         self.root.after(self.delay, self.animate)
 
     def resume(self, pause_after=-1):
+        """Run the simulation and animation for the specified number of frames. If no number is specified, 
+        this will run indefenitely until the program is exited."""
         self.pause_after = pause_after
         self.root.mainloop()
 
     def resize(self):
-        """Function in subclass updates width, height, and margin. This function resizes
-        the canvas and computes new margin bounds."""
+        """This function resizes the canvas and computes new margin bounds. Updating the internal values
+        of the width, height, and margin is handled by the user-interface."""
         self.sim.leftmargin = self.sim.margin
         self.sim.rightmargin = self.sim.width - self.sim.margin
         self.sim.topmargin = self.sim.margin
@@ -637,6 +671,7 @@ class BoidsVisualizer:
         self.canvas.config(width=self.sim.width, height=self.sim.height)
 
     def toggle_stats(self):
+        """Enable or disable the stats window depending on its current state."""
         if self.stats_open:
             self.stats.close()
             self.stats = None
@@ -649,6 +684,7 @@ class BoidsVisualizer:
         self.stats_open = not self.stats_open
 
     def toggle_settings(self):
+        """Enable or disable the settings window depending on its current state."""
         if self.ui_open:
             self.ui.close()
             self.ui = None
@@ -661,21 +697,22 @@ class BoidsVisualizer:
         self.ui_open = not self.ui_open
 
     def close(self):
+        """End the simulation and destroy the canvas. If this is called with a pending animation,
+        it may print warnings on the console. This does lead to any unintended behavior and can
+        safely be ignored."""
         self.sim = None
         self.root.destroy()
         self.root = None
 
-SIM = None
 
 def terminate(sig, _):
-    """Needed for proper termination of program on ctrl+c / keyboard interrupt."""
-    try:
-        SIM.canvas.destroy()
-    except:
-        sys.exit(0)
+    """Needed for proper termination of program on ctrl+c / keyboard interrupt when multiple
+    windows are open (like settings and/or stats)."""
+    sys.exit(0)
+
 
 if __name__ == "__main__":
     # Run the simulation with visualization
     signal.signal(signal.SIGINT, terminate)
-    BoidsVisualizer(num_boids=50, num_preds=1, width=640, height=480, seed=None)
+    SIM = BoidsVisualizer(num_boids=50, num_preds=1, width=640, height=480, seed=None)
     #BoidsVisualizer(num_boids=300, width=300, height=300)

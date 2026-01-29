@@ -19,7 +19,6 @@ class EatingExperiment:
     """
     Runs eating experiments with various parameters and tracks eating behavior.
     """
-    
     def __init__(self, duration_frames: int = 6000, repetitions: int = 10):
         """
         Initialize the eating experiment.
@@ -67,11 +66,10 @@ class EatingExperiment:
             seed=seed
         )
         
-        # Modify the parameters (alignment parameter)
+        # Modify the parameters (speed and turning factor)
         sim.maxspeed_pred = maxspeed_pred
         sim.minspeed_pred = minspeed_pred
         sim.turn_factor_pred = turn_factor_pred
-        #sim.eating_duration = eating_duration
         sim.eating_duration = self.eating_duration
         
         # Track eating over time
@@ -154,7 +152,6 @@ class EatingExperiment:
                             'initial_boids': result['initial_boids']})
             
             # Print summary
-            # final_eaten = result['fish_eaten'][-1]
             final_eaten = avg_fish_eaten
             final_frame = result['time_points'][-1]
             print(f"  Result: {final_eaten}/{result['initial_boids']} fish eaten by frame {final_frame}")
@@ -179,7 +176,8 @@ class EatingExperiment:
         
         fig, ax = plt.subplots(1, 1, figsize=(12, 5))
         
-        # Plot the fish remaining over time
+        # Create 2 boxplots for predator speed (x-axis). Colorcoded facecolors and medians for
+        # the 30 frame and 60 frame eating durations.
         for type in [30, 60]:
             if type==60:
                 results = self.results60
@@ -213,53 +211,7 @@ class EatingExperiment:
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
             print(f"Plot saved to {save_path}")
         
-        print('start plot')
         plt.show()
-    
-    def save_results_to_csv(self, filepath: str):
-        """
-        Save experiment results to a CSV file.
-        
-        Args:
-            filepath: Path to save the CSV file
-        """
-        if not self.results:
-            print("No results to save. Run experiments first.")
-            return
-        
-        import csv
-        
-        with open(filepath, 'w', newline='') as csvfile:
-            writer = csv.writer(csvfile)
-            
-            # Write header
-            writer.writerow([
-                'experiment_id', 'repetition', 'num_boids', 'num_preds', 'maxspeed_pred', 'minspeed_pred', 'turn_factor_pred', 'seed',
-                'fish_eaten', 'fish_remaining'
-            ])
-            
-            # Write data
-            for exp_id, result in enumerate(self.results):
-                params = result['params']
-                for repetition, eaten, remaining in zip(
-                    result['repetition'],
-                    result['average_fish_eaten'],
-                    result['average_fish_remaining']
-                ):
-                    writer.writerow([
-                        exp_id,
-                        repetition,
-                        params['num_boids'],
-                        params['num_preds'],
-                        params['maxspeed_pred'],
-                        params['minspeed_pred'],
-                        params['turn_factor_pred'],
-                        params['seed'],
-                        eaten,
-                        remaining
-                    ])
-        
-        print(f"Results saved to {filepath}")
 
 
 def example_experiments(repetitions):
@@ -271,16 +223,14 @@ def example_experiments(repetitions):
     experiment = EatingExperiment(duration_frames=2000, repetitions=repetitions)
     
     # Define parameter sets to test
-    experiment_count = 45  # set to 23 for 0.2 jumps
+    experiment_count = 45  # Makes jumps of 0.1
     minspeed_baseline, maxspeed_baseline, turn_factor_baseline = 6, 3, 0.2
-    minfactor = 0.1  # start at 0.1*fishspeed
-    maxfactor = 4.5    # end at 4.5*fishspeed
+    minfactor = 0.1  # start at 0.1 * speed_baseline
+    maxfactor = 4.5  # end at 4.5 * speed_baseline
 
     minspeeds = np.linspace(minfactor*minspeed_baseline, maxfactor*maxspeed_baseline, experiment_count)
     maxspeeds = np.linspace(minfactor*maxspeed_baseline, maxfactor*maxspeed_baseline, experiment_count)
     turn_factors = np.linspace(minfactor*turn_factor_baseline, maxfactor*turn_factor_baseline, experiment_count)
-    # eating_baseline = 60
-    #eating_times = np.linspace((1/minfactor)*eating_baseline, (1/maxfactor)*eating_baseline, experiment_count)
     experiment.x = np.round(np.linspace(minfactor, maxfactor, experiment_count), 1)
 
     param_sets = [
@@ -290,7 +240,6 @@ def example_experiments(repetitions):
             'maxspeed_pred': maxspeeds[i],
             'minspeed_pred': minspeeds[i],
             'turn_factor_pred': turn_factors[i],
-            #'eating_duration': eating_times[i],
             'seed': str(12345*i)+'/'+'5062PRCS6Y'
         }
         for i in range(experiment_count)
@@ -298,13 +247,10 @@ def example_experiments(repetitions):
 
     # Run experiments
     experiment.eating_duration = 60
-    results60 = experiment.run_multiple_experiments(param_sets)
+    experiment.run_multiple_experiments(param_sets)
     
     experiment.eating_duration = 30
-    results30 = experiment.run_multiple_experiments(param_sets)
-    
-    # Save results
-    # experiment.save_results_to_csv('speed_experiment_results.csv')
+    experiment.run_multiple_experiments(param_sets)
     
     # Plot results
     experiment.plot_results(save_path='speed_experiment_double.png')
