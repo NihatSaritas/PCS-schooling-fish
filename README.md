@@ -41,16 +41,23 @@ python figure_scripts/validate_simulation.py
 Boxplot varying alignment factor (parameter_to_vary = 'matching'):
 ```bash
 python eating_experiment/eating_experiment.py
+    on failure try:
+    python eating_experiment.eating_experiment
+
 ```
 
 Boxplot varying separation factor (parameter_to_vary = 'avoid'):
 ```bash
 python eating_experiment/eating_experiment.py
+    on failure try:
+    python eating_experiment.eating_experiment
 ```
 
 Boxplot varying cohesion factor (parameter_to_vary = 'centering'):
 ```bash
 python eating_experiment/eating_experiment.py
+    on failure try:
+    python eating_experiment.eating_experiment
 ```
 
 
@@ -62,7 +69,7 @@ python eating_experiment/eating_experiment.py
 |**num_boids**|50|Number of fish in the simulation|$1$|$10^5$|<code>int</code>
 |**visual_range**|40|Distance at which boids can see neighbors|$10^{-6}$|$10^{6}$|<code>float</code>
 |**protected_range**|8|Minimum distance maintained between boids|$10^{-6}$|$10^{6}$|<code>float</code>
-|**centering_factor**|0.0005|Strength of cohesion (moving toward center of mass)|$10^{-6}$|1$$|<code>float</code>
+|**centering_factor**|0.0005|Strength of cohesion (moving toward center of mass)|$10^{-6}$|$1$|<code>float</code>
 |**avoid_factor**|0.07|Strength of separation (avoiding collisions)|$10^{-6}$|$1$|<code>float</code>
 |**matching_factor**|0.05|Strength of alignment (matching velocity)|$10^{-6}$|$1$|<code>float</code>
 |**maxspeed**|3|Maximum boid speed|minspeed|$10^{6}$|<code>float</code>
