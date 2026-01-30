@@ -38,7 +38,20 @@ python figure_scripts/validate_simulation.py
     on failure try:
     python -m figure_scripts.validate_simulation
 ```
+Boxplot varying alignment factor (parameter_to_vary = 'matching'):
+```bash
+python eating_experiment/eating_experiment.py
+```
 
+Boxplot varying separation factor (parameter_to_vary = 'avoid'):
+```bash
+python eating_experiment/eating_experiment.py
+```
+
+Boxplot varying cohesion factor (parameter_to_vary = 'centering'):
+```bash
+python eating_experiment/eating_experiment.py
+```
 
 
 ## Parameters
