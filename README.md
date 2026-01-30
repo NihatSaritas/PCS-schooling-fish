@@ -2,6 +2,9 @@
 
 A Python-based boids simulation modeling schooling fish behavior with predator interactions.
 
+## Styling convention:
+PEP8 compliant with maximum line length of 99 characters.
+
 ## Usage
 
 ### Run the main simulation:

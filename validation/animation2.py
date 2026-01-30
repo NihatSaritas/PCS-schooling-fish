@@ -1,14 +1,14 @@
-""" This particular dataset does not store orientations, but we instead use the
+"""This particular dataset does not store orientations, but we instead use the
 stored velocity in x and y direction as orientation of the fish."""
+
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 from matplotlib.lines import Line2D
 import json as json
 
-
 # If run from main directory, appends 'validation/' to savepath.
-PATH = ''
+PATH = ""
 # Buffersize for quiver to handle inconsistent tracked number of fish.
 NUM_FISH = 300
 
@@ -46,7 +46,9 @@ def split_data(fish_dict, frame):
     return px, py, vx, vy, count
 
 
-def frame_behavior_quantification(framedata, polarization=True, milling_index=True):  # dispersion=False,
+def frame_behavior_quantification(
+    framedata, polarization=True, milling_index=True
+):  # dispersion=False,
     # Compute the polarization. See header comment for details.
     px, py, vx, vy, count = framedata
     px = px[0:count]
@@ -77,19 +79,18 @@ def frame_behavior_quantification(framedata, polarization=True, milling_index=Tr
 
 
 def create_hist(p, m):
-    bins=50
+    bins = 50
 
     for end in [-1, 2500]:
-        fig = plt.figure()
-        plt.hist(p[0:end], bins, alpha=0.5, label='polarization', color='b', density=True)
-        plt.hist(m[0:end], bins, alpha=0.5, label='milling index', color='r', density=True)
-        plt.legend(loc='upper right')
+        _ = plt.figure()
+        plt.hist(p[0:end], bins, alpha=0.5, label="polarization", color="b", density=True)
+        plt.hist(m[0:end], bins, alpha=0.5, label="milling index", color="r", density=True)
+        plt.legend(loc="upper right")
         if end == -1:
-            plt.savefig(PATH + 'dataset_hist_full.png')
+            plt.savefig(PATH + "dataset_hist_full.png")
         else:
-            plt.savefig(PATH + 'dataset_hist.png')
+            plt.savefig(PATH + "dataset_hist.png")
         plt.show()
-
 
 
 def animate(fish_dict):
@@ -104,45 +105,54 @@ def animate(fish_dict):
     ax = axes["A"]
     ax_sub = axes["B"]
 
-    ax.set_xlim((0,2100))
-    ax.set_ylim((0,1200))
+    ax.set_xlim((0, 2100))
+    ax.set_ylim((0, 1200))
     ax_sub.set_xlim(0, frame_count)
     ax_sub.set_ylim(0, 1)
 
-    ax_sub.set_xlabel('Frame')
-    ax_sub.set_ylabel('Polarization / Milling index')
+    ax_sub.set_xlabel("Frame")
+    ax_sub.set_ylabel("Polarization / Milling index")
 
-
-    polarization, milling = frame_behavior_quantification(split_data(fish_dict,1))
+    polarization, milling = frame_behavior_quantification(split_data(fish_dict, 1))
     x = [1]
     p = [polarization]
     m = [milling]
 
-    stem_polarization = ax_sub.stem(x, p, basefmt='b', linefmt=None, markerfmt='b')
-    stem_milling = ax_sub.stem(x, m, basefmt='r', linefmt=None, markerfmt='r')
+    stem_polarization = ax_sub.stem(x, p, basefmt="b", linefmt=None, markerfmt="b")
+    stem_milling = ax_sub.stem(x, m, basefmt="r", linefmt=None, markerfmt="r")
     stem_polarization[1].set_visible(False)
     stem_polarization[2].set_visible(False)
     stem_milling[1].set_visible(False)
     stem_milling[2].set_visible(False)
 
-    plt.setp(stem_polarization[0], markersize=2, alpha=0.2, color='b')
-    plt.setp(stem_milling[0], markersize=2, alpha=0.2, color='r')
+    plt.setp(stem_polarization[0], markersize=2, alpha=0.2, color="b")
+    plt.setp(stem_milling[0], markersize=2, alpha=0.2, color="r")
 
     px, py, vx, vy, count = split_data(fish_dict, 1)
-    ax.set_title(f'Frame 1, tracked fish: {count}')
+    ax.set_title(f"Frame 1, tracked fish: {count}")
 
-    fish = ax.quiver(px, py, vx, vy, color='orange', 
-                       angles='xy', 
-                       scale_units='xy',
-                       label='golden\nshiner',
-                    )
+    fish = ax.quiver(
+        px,
+        py,
+        vx,
+        vy,
+        color="orange",
+        angles="xy",
+        scale_units="xy",
+        label="golden\nshiner",
+    )
 
-    ax.legend(loc = 'upper right', bbox_to_anchor=(1.125, 1))
+    ax.legend(loc="upper right", bbox_to_anchor=(1.125, 1))
 
     # Low opacity (alpha) value for markers makes the legend unreadable, this workaround
     # creates a custom legend with visible colorcoding.
-    custom_legend = [Line2D([0], [0], color='b', lw=1), Line2D([0], [0], color='r', lw=1)]
-    ax_sub.legend(custom_legend, ['polarization', 'milling\nindex'], loc = 'upper right', bbox_to_anchor=(1.125, 1))
+    custom_legend = [Line2D([0], [0], color="b", lw=1), Line2D([0], [0], color="r", lw=1)]
+    ax_sub.legend(
+        custom_legend,
+        ["polarization", "milling\nindex"],
+        loc="upper right",
+        bbox_to_anchor=(1.125, 1),
+    )
 
     def update(frame_idx):
         """
@@ -152,7 +162,7 @@ def animate(fish_dict):
         frame = frame_idx + 1
         px, py, vx, vy, count = split_data(fish_dict, frame)
         polarization, milling = frame_behavior_quantification([px, py, vx, vy, count])
-        ax.set_title(f'Frame {frame}, tracked fish: {count}')
+        ax.set_title(f"Frame {frame}, tracked fish: {count}")
 
         fish.set_offsets(np.column_stack((px, py)))
         fish.set_UVC(vx, vy)
@@ -165,28 +175,21 @@ def animate(fish_dict):
             stem_polarization[0].set_xdata(x)
             stem_polarization[0].set_ydata(p)
 
-            #stem_polarization[2].set_xdata(x)
-            #stem_polarization[2].set_ydata(p)
+            # stem_polarization[2].set_xdata(x)
+            # stem_polarization[2].set_ydata(p)
 
-        
             stem_milling[0].set_xdata(x)
             stem_milling[0].set_ydata(m)
 
-            #stem_milling[2].set_xdata(x)
-            #stem_milling[2].set_ydata(m)
+            # stem_milling[2].set_xdata(x)
+            # stem_milling[2].set_ydata(m)
 
+    ani = FuncAnimation(fig, update, frames=frame_count, interval=1)
 
-    ani = FuncAnimation(
-        fig,
-        update,
-        frames=frame_count,
-        interval=1
-    )
-
-    # Saving as gif is very slow and large (200+ mb) for 5000 frames, 
+    # Saving as gif is very slow and large (200+ mb) for 5000 frames,
     # so switch to video format instead.
     # ani.save('fish_animation_2.gif', writer='pillow', fps=60)
-    ani.save(PATH + 'fish_animation_2_with_quant.mp4', writer='ffmpeg', fps=60)
+    ani.save(PATH + "fish_animation_2_with_quant.mp4", writer="ffmpeg", fps=60)
     plt.show()
     create_hist(p, m)
 
@@ -196,7 +199,7 @@ def read_dataset(file):
         f = open(file)
     except FileNotFoundError:
         global PATH
-        PATH += 'validation/'
+        PATH += "validation/"
         f = open(PATH + file)
     file_content = f.read()
     fish_dict = json.loads(file_content)
@@ -204,7 +207,7 @@ def read_dataset(file):
 
 
 def main():
-    fish_dict = read_dataset('dataset2/schooling_frames.json')
+    fish_dict = read_dataset("dataset2/schooling_frames.json")
     animate(fish_dict)
 
 
