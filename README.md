@@ -30,14 +30,19 @@ Histogram of polarization and miling-index for our dataset and our simulation (t
 python figure_scripts/validate_simulation.py
 ```
 Boxplot varying alignment factor (parameter_to_vary = 'matching'):
-```python eating_experiment/eating_experiment.py
+```bash
+python eating_experiment/eating_experiment.py
+```
 
 Boxplot varying separation factor (parameter_to_vary = 'avoid'):
-```python eating_experiment/eating_experiment.py
+```bash
+python eating_experiment/eating_experiment.py
+```
 
 Boxplot varying cohesion factor (parameter_to_vary = 'centering'):
-```python eating_experiment/eating_experiment.py
-
+```bash
+python eating_experiment/eating_experiment.py
+```
 
 
 ## Parameters
