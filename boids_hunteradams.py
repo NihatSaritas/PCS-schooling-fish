@@ -149,7 +149,13 @@ class BoidsSimulation:
 
     def update(self):
         """Update all boids and predators for one timestep"""
+        # First test basic assumptions
+        assert (len(self.boids) == self.num_boids)
+        assert (len(self.predators) == self.num_preds)
+
         for boid in self.boids:
+            # Test assumptions
+            assert (boid.vx != 0 and boid.vy != 0)
             # Heading frame
             speed0 = math.sqrt(boid.vx * boid.vx + boid.vy * boid.vy) + 1e-9
             hx, hy = boid.vx / speed0, boid.vy / speed0  # forward

@@ -13,7 +13,7 @@ LINE_ALPHA = 0.1
 
 
 class StatWindow:
-    """Class for visualizing the polarization and milling-index over time while a simulation and
+    """Class for visualizing the polarization and milling index over time while a simulation and
     its visualization class are running. For definitions on these metrics refer to the report.
     Uses a Matplotlib stemplot to create the figure and embeds this in a tkinter window. When the
     default x-range (2000) fills, the window slides by 1 each frame. The width of this x-range is
@@ -22,11 +22,11 @@ class StatWindow:
     Args:
         visualizer: serves as reference to parent visualizer, which holds a reference to the
                     simulation, which is called to compute and return the polarization and
-                    milling-index.
+                    milling index.
     """
 
     def __init__(self, visualizer):
-        # Reference to parent, needed to access the polarization and milling-index.
+        # Reference to parent, needed to access the polarization and milling index.
         self.visualizer = visualizer
 
         # Setup tkinter window for stats.

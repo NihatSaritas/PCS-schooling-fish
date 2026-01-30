@@ -1,4 +1,4 @@
-"""Create histogram of polarization and milling-index over 10 iterations for
+"""Create histogram of polarization and milling index over 10 iterations for
 2000 frames."""
 
 # Get path to simulation file.
