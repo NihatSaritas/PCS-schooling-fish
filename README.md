@@ -31,45 +31,55 @@ python figure_scripts/validate_simulation.py
 
 ## Parameters
 
-### Boid Parameters
+### Boid parameters
 | Parameter | Default | Description | Min | Max | Type
 |-|-|-|-|-|-|
-|**num_boids**|50|Number of fish in the simulation|1|$10^5$|<code>int</code>
-|**visual_range**|40|Distance at which boids can see neighbors|||
-|**protected_range**|8|Minimum distance maintained between boids|||
-|**centering_factor**|0.0005|Strength of cohesion (moving toward center of mass)|||<code>float</code>
-|**avoid_factor**|0.07|Strength of separation (avoiding collisions)|||<code>float</code>
-|**matching_factor**|0.05|Strength of alignment (matching velocity)|||<code>float</code>
-|**maxspeed**|3|Maximum boid speed|||
-|**minspeed**|2|Minimum boid speed|||
+|**num_boids**|50|Number of fish in the simulation|$1$|$10^5$|<code>int</code>
+|**visual_range**|40|Distance at which boids can see neighbors|$10^{-6}$|$10^{6}$|<code>float</code>
+|**protected_range**|8|Minimum distance maintained between boids|$10^{-6}$|$10^{6}$|<code>float</code>
+|**centering_factor**|0.0005|Strength of cohesion (moving toward center of mass)|$10^{-6}$|1$$|<code>float</code>
+|**avoid_factor**|0.07|Strength of separation (avoiding collisions)|$10^{-6}$|$1$|<code>float</code>
+|**matching_factor**|0.05|Strength of alignment (matching velocity)|$10^{-6}$|$1$|<code>float</code>
+|**maxspeed**|3|Maximum boid speed|minspeed|$10^{6}$|<code>float</code>
+|**minspeed**|2|Minimum boid speed|$10^{-6}$|$10^{6}$|<code>float</code>
 |**turn_factor**|0.2|Edge avoidance strength <br> (this is an example of newline in <br> table)|$10^{-6}$|1|<code>float</code>
 
 
 ### Field of View (Katz et al. inspired)
 | Parameter | Default | Description | Min | Max | Type
 |-|-|-|-|-|-|
-|**fieldofview_degrees**|170°|Field of view (small blind zone behind)|||
-|**front_weight**|0.3|Extra influence of neighbours in front  (‘front–back asymmetry in social interactions’)|||<code>float</code>
-|**speed_control**|0.03|Speed change from crowding (computed from neighbour density ahead vs behind)|||<code>float</code>
-|**turning_control**|0.05|Turning from left/right density difference (computed in the fish’s body frame)|||<code>float</code>
-|**max_turn**|0.15|Limits turning per step to keep motion smooth|||<code>float</code>
+|**fieldofview_degrees**|170°|Field of view (small blind zone behind)|$0$|$360$|<code>float</code>
+|**front_weight**|0.3|Extra influence of neighbours in front  (‘front–back asymmetry in social interactions’)|$10^{-6}$|$10$|<code>float</code>
+|**speed_control**|0.03|Speed change from crowding (computed from neighbour density ahead vs behind)|$10^{-6}$|$1$|<code>float</code>
+|**turning_control**|0.05|Turning from left/right density difference (computed in the fish’s body frame)|$10^{-6}$|$1$|<code>float</code>
+|**max_turn**|0.15|Limits turning per step to keep motion smooth|$10^{-6}$|$1$|<code>float</code>
 
-### Predator Parameters
+### Predator parameters
 | Parameter | Default | Description | Min | Max | Type
 |-|-|-|-|-|-|
-|**num_preds**|1|Number of predators|||<code>int</code>
-|**visual_range_pred**|60|Predator vision range|||
-|**predatory_range**|100|Range where boids flee from predators|||
-|**eating_range**|20|Range where a predator can eat a boid|||
-|**predator_weight**|0.1|Strength of predator attraction/avoidance|||<code>float</code>
-|**avoid_factor_pred**|0.1|Predator-to-predator avoidance|||<code>float</code>
-|**maxspeed_pred**|3|Maximum predator speed|||
-|**minspeed_pred**|2|Minimum predator speed|||
-|**turn_factor_pred**|0.2|Predator edge avoidance strength|||<code>float</code>
+|**num_preds**|1|Number of predators|$0$|$10^{5}$|<code>int</code>
+|**visual_range_pred**|160|Predator vision range|0|$10^{6}$|<code>float</code>
+|**predatory_range**|100|Range where boids flee from predators|0|$10^{6}$|<code>float</code>
+|**eating_range**|20|Range where a predator can eat a boid|0|$10^{6}$|<code>int</code>
+|**eating_range**|60|Number of frames predator remains stationary after eating a fish|0|$10^{6}$|<code>int</code>|**pred2fish_attraction**|0.1|Strength of predator attraction to fish|$-1$|$1$|<code>float</code>
+|**fish2pred_avoidance**|0.15|Strength of fish avoidance predator|-1|$1$|<code>float</code>
+|**avoid_factor_pred**|0.1|Predator-to-predator avoidance|$10^{-6}$|$1$|<code>float</code>
+|**maxspeed_pred**|3|Maximum predator speed|minspeed|$10^{6}$|<code>float</code>
+|**minspeed_pred**|2|Minimum predator speed|$10^{-6}$|$10^{6}$|<code>float</code>
+|**turn_factor_pred**|0.2|Predator edge avoidance strength|$10^{-6}$|$1$|<code>float</code>
 
-### Display
+### Display parameters
 | Parameter | Default | Description | Min | Max | Type
 |-|-|-|-|-|-|
-|**width**|640|Canvas width|||
-|**height**|480|Canvas height|||
-|**margin**|20% of <code>max(width, height)</code>|Boundary margin for edge avoidance|||
+|**width**|640|Canvas width|$60$|$4000$|<code>int</code>
+|**height**|480|Canvas height|$60$|$4000$|<code>int</code>
+|**margin**|<code>0.2*max(width, height)</code>|Boundary margin for edge avoidance|$1$|<code>0.4*max(width,height)</code>|<code>int</code>
+
+### Additional or shared parameters
+| Parameter | Default | Description | Min | Max | Type
+|-|-|-|-|-|-|
+|**boid_triangle_size**|3|Visual size of fish|$1$|$200$|<code>int</code>
+|**pred_triangle_size**|5|Visual size of predator|$1$|$200$|<code>int</code>
+|**randomness_frequency**|0.15|Frequency of randomness happening in fish or predator turns|$0$|$1$|<code>float</code>
+|**random_factor**|0.25|Strength of randomness when it occurs|$0$|$1$|<code>float</code>
+|**xrange**|2000|Range of x-axis in sliding stats window|$10$|$10^{5}$|<code>int</code>

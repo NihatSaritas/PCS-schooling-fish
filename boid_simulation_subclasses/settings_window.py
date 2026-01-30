@@ -152,7 +152,7 @@ class SettingsWindow:
         self.visualizer.sim.fieldofview_degrees = self.handle_input(self.entry_fieldofview, minval=0, maxval=360,
                                                                 type_func=float, fallback=self.visualizer.sim.fieldofview_degrees)
 
-        self.visualizer.sim.front_weight = self.handle_input(self.entry_front_weight, minval=10**-6, maxval=1,
+        self.visualizer.sim.front_weight = self.handle_input(self.entry_front_weight, minval=10**-6, maxval=10,
                                                                 type_func=float, fallback=self.visualizer.sim.front_weight)
 
         self.visualizer.sim.speed_control = self.handle_input(self.entry_speed_control, minval=10**-6, maxval=1,
