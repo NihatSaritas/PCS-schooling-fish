@@ -83,3 +83,4 @@ python figure_scripts/validate_simulation.py
 |**randomness_frequency**|0.15|Frequency of randomness happening in fish or predator turns|$0$|$1$|<code>float</code>
 |**random_factor**|0.25|Strength of randomness when it occurs|$0$|$1$|<code>float</code>
 |**xrange**|2000|Range of x-axis in sliding stats window|$10$|$10^{5}$|<code>int</code>
+|**frame_delay**|16|Pause duration between frames|$1$|$10^{3}$|<code>int</code>
