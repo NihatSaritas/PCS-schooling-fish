@@ -85,9 +85,12 @@ class StatWindow:
         """Function in other subclass updates the x range of the sliding window. 
         This function resizes the datastructures accordingly."""
         # The if else statements handle cases where the x-range is edited without the stats window being open.
-        # The max function handles choosing the proper upper limit for xlim. TODO
+        # The max function handles choosing the proper upper limit for xlim. The max function handles edge
+        # cases to ensure proper functioning of the sliding window.
         self.ax.set_xlim((self.x[0] if self.x else 1, 
                           max(self.x[0] + self.visualizer.stat_xrange, self.x[-1]) if self.x else self.visualizer.stat_xrange))
+        
+        # Drop oldest n entries in datastructures when x-range is resized to be smaller
         if len(self.x) > self.visualizer.stat_xrange:
             drop_first_n = len(self.x) - self.visualizer.stat_xrange
             self.x = self.x[drop_first_n:]
@@ -95,6 +98,7 @@ class StatWindow:
             self.milling_index = self.milling_index[drop_first_n:]
 
     def update(self):
+        """Uodate the stats window by 1 frame. Slide the window if x-range is full."""
         polarization, milling_index = self.visualizer.sim.get_stats()
 
         # Update data structures
