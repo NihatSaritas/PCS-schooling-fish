@@ -1,10 +1,8 @@
 """
-Experiment to track fish eating behavior over time with multiple parameters.
-
-This module runs simulations with different parameter configurations and tracks
-how many fish have been eaten by predators at different time points.
+Eating experiment where predator movement and turning speed is scaled on x-axis. The
+number of remaining fish after 2000 frames can be seen on the y-axis. Generates boxplot
+with colorcoded eating duration of 30 and 60 frames to show how this moves the bottleneck.
 """
-
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

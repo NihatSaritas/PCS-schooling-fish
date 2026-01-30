@@ -1,8 +1,5 @@
 """ This particular dataset does not store orientations, but we instead use the
-stored velocity in x and y direction as orientation of the fish.
-
-TODO: explain used paper and refer to its method of computing polarization and 
-the milling index."""
+stored velocity in x and y direction as orientation of the fish."""
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation

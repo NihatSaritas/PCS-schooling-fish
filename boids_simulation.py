@@ -1,3 +1,4 @@
+"""Old prototype for boids simulator. Use boids_hunteradams.py for final version."""
 import tkinter as tk
 import math
 import random

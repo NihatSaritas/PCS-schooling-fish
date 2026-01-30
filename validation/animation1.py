@@ -1,3 +1,5 @@
+"""Visualizes a dataset to see if it is suited for validation. We ended up finding a better
+alternative, for this see animation2.py."""
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation

@@ -1,3 +1,5 @@
+"""Main simulation file. Requires files in /void_simulation_subclasses to handle
+the settings and stats windows."""
 import math
 import random
 import tkinter as tk
