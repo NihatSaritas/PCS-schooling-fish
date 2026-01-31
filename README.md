@@ -6,7 +6,9 @@ A Python-based boids simulation modeling schooling fish behavior with predator i
 PEP8 compliant with maximum line length of 99 characters.
 
 ## Tests in code:
-Throughout the files, although mostly for our core simulation code, we test our assumptions with assertions to ensure the code does what we expect it to.
+Assertions are mainly present in our core simulation, where we test some of our assumptions with them to ensure the code does what we expect it to. This is important to prevent unexpected behavior while running repeated simulations for our results, during which the visualizer is not always active.
+
+Other parts of the code, such as the settings window, or the statistics window, have been manually tested as it would be difficult to assert the behavioral effects of changing a parameter, while it is possible to observe that collective behavior disappears when, for example, setting the <code>visual_range</code> to the minimum allowed value.
 
 ## Usage
 
@@ -20,7 +22,7 @@ python boids_hunteradams.py
 ```bash
 python validation/animation2.py
     on failure try:
-    python -m figure_scripts.validate_simulation
+    python -m validation.animation2
 ```
 
 *Note: `animation1.py` is an experiment done on visualization of another dataset. We found out this contains many discontinous small snippets of frames, which is not suited for our intended use.*
@@ -42,7 +44,7 @@ Boxplot varying alignment factor (parameter_to_vary = 'matching'):
 ```bash
 python eating_experiment/eating_experiment.py
     on failure try:
-    python eating_experiment.eating_experiment
+    python -m eating_experiment.eating_experiment
 
 ```
 
@@ -50,14 +52,14 @@ Boxplot varying separation factor (parameter_to_vary = 'avoid'):
 ```bash
 python eating_experiment/eating_experiment.py
     on failure try:
-    python eating_experiment.eating_experiment
+    python -m eating_experiment.eating_experiment
 ```
 
 Boxplot varying cohesion factor (parameter_to_vary = 'centering'):
 ```bash
 python eating_experiment/eating_experiment.py
     on failure try:
-    python eating_experiment.eating_experiment
+    python -m eating_experiment.eating_experiment
 ```
 
 

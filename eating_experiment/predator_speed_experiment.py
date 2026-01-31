@@ -155,8 +155,9 @@ class EatingExperiment:
             # Print summary
             final_eaten = avg_fish_eaten
             final_frame = result["time_points"][-1]
-            print(f"  Result: {final_eaten}/{
-                    result['initial_boids']} fish eaten by frame {final_frame}")
+            print(
+                f"  Result: {final_eaten}/{result['initial_boids']} fish eaten by frame "
+                f"{final_frame}")
             print()
 
         if self.eating_duration == 60:
@@ -186,7 +187,6 @@ class EatingExperiment:
                 facecolor = "mediumblue"
                 mediancolor = "turquoise"
             else:
-                print("if 30")
                 results = self.results30
                 facecolor = "red"
                 mediancolor = "darkred"

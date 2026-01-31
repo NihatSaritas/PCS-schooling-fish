@@ -166,8 +166,9 @@ class EatingExperiment:
             # final_eaten = result['fish_eaten'][-1]
             final_eaten = avg_fish_eaten
             final_frame = result["time_points"][-1]
-            print(f"  Result: {final_eaten}/{
-                    result['initial_boids']} fish eaten by frame {final_frame}")
+            print(
+                f"  Result: {final_eaten}/{result['initial_boids']} fish eaten by frame "
+                f"{final_frame}")
             print()
 
         self.results = results
